@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+    h2 {
+        font-size: 16px;
+    }
+    .materials-table {
+        width: 100%; /* Ширина таблицы на 100% */
+        border-collapse: collapse; /* Объединяем границы ячеек */
+    }
+
+    .materials-table th, .materials-table td {
+        border: 1px solid #ccc; /* Границы ячеек и заголовков */
+        padding: 8px; /* Отступы внутри ячеек */
+    }
+
+    .materials-table th {
+        background-color: #f2f2f2; /* Цвет фона для заголовков */
+    }
+</style>
+<div class="container mt-5">
+    <h1> Таблица покрытий</h1>
+    <table class="materials-table">
+        <thead>
+            <tr>
+                <th>Название покрытия</th>
+                <th>Материал покрытия</th>
+                <th>Способ нанесения</th>
+                <th>Максимальная толщина</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ coating.Name }}</td>
+                <td>{{ coating.MaterialCoating }}</td>
+                <td>{{ coating.TypeApplication }}</td>
+                <td>{{ coating.MaxThickness }}</td>
+                <td><a href="/coating/{{coating.id}}/delete"  class="btn btn-warning">Удалить</a>
+                <a href="/coating/{{coating.id}}/update"  class="btn btn-success">Изменить</a></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

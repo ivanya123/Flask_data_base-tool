@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+</style>
+<div class="container mt-5">
+    <h1>Обрабатываемый материал</h1>
+    <form method="post">
+        <input type="text" name="Name" class="form-control" value="{{ request.form.get('Name', '') }}" placeholder="Название материала">
+        <input type="text" name="NameP" class="form-control" value="{{ request.form.get('NameP', '') }}" placeholder="Физическо-механические свойства">
+        <input type="text" name="NameX" class="form-control" value="{{ request.form.get('NameX', '') }}" placeholder="Химический состав">
+        <input type="text" name="NamePr" class="form-control" value="{{ request.form.get('NamePr', '') }}" placeholder="Свойства">
+        <input type="text" name="NameGost" class="form-control" value="{{ request.form.get('NamePr', '') }}" placeholder="Гост">
+        <!-- Остальные поля для первой формы -->
+        <input type="submit" name="Button_1" class="btn btn-success" value="Добавить">
+    </form>
+</div><br>
+
+<div class="container mt-5">
+    <h1>Износостойкое покрытие</h1>
+    <form method="post">
+        <input type="text" name="Name1" class="form-control" value="{{ request.form.get('Name1', '') }}" placeholder="Название покрытия">
+        <input type="text" name="Name2" class="form-control" value="{{ request.form.get('Name2', '') }}" placeholder="Материал покрытия">
+        <input type="text" name="Name3" class="form-control" value="{{ request.form.get('Name3', '') }}" placeholder="Способ нанесения">
+        <input type="text" name="Color" class="form-control" value="{{ request.form.get('Color', '') }}" placeholder="Цвет">
+        <input type="text" name="Name4" class="form-control" value="{{ request.form.get('Name4', '') }}" placeholder="Максимальная толщина(Число)">
+        <input type="text" name="NameNano" class="form-control" value="{{ request.form.get('NameNano', '') }}" placeholder="Микротвердость">
+        <input type="text" name="NameResistnce" class="form-control" value="{{ request.form.get('NameResistnce', '') }}" placeholder="Температурное устойчивость">
+        <input type="text" name="NameKoef" class="form-control" value="{{ request.form.get('NameKoef', '') }}" placeholder="Коэффициент трения">
+        <input type="submit" name="Button_2" class="btn btn-success" value="Добавить">
+    </form>
+</div><br>
+
+<div class="container mt-5">
+    <h1>Режущий инструмент</h1>
+    <form method="post">
+        <input type="text" name="Name5" class="form-control" value="{{ request.form.get('Name5', '') }}" placeholder="Название инструмента">
+        <input type="text" name="Name6" class="form-control" value="{{ request.form.get('Name6', '') }}" placeholder="Материал инструмента">
+        <input type="text" name="Name8" class="form-control" value="{{ request.form.get('Name8', '') }}" placeholder="Количество зубьев фрезы(целое число)">
+        <input type="text" name="Name9" class="form-control" value="{{ request.form.get('Name9', '') }}" placeholder="Диаметр(Число)">
+        <!-- Остальные поля для третьей формы -->
+        <input type="submit" name="Button_3" class="btn btn-success" value="Добавить">
+    </form>
+</div><br>
+{% endblock %}
+
+
+

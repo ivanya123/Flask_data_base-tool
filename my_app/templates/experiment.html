@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+    h2 {
+        font-size: 16px;
+    }
+    .materials-table {
+        width: 100%; /* Ширина таблицы на 100% */
+        border-collapse: collapse; /* Объединяем границы ячеек */
+    }
+
+    .materials-table th, .materials-table td {
+        border: 1px solid #ccc; /* Границы ячеек и заголовков */
+        padding: 8px; /* Отступы внутри ячеек */
+    }
+
+    .materials-table th {
+        background-color: #f2f2f2; /* Цвет фона для заголовков */
+    }
+</style>
+<div class="container mt-5">
+    <h1> Таблица материалов </h1>
+    <table class="materials-table">
+        <thead>
+            <tr>
+                <th>Обрабатываемый материал</th>
+                <th>Инструмент</th>
+                <th>Износостойкое покрытие</th>
+                <th>Обороты шпинделя(n), об/мин</th>
+                <th>Подача(s), мм/мин</th>
+                <th>Пройденная длина обработки(L), мм</th>
+                <th>Стойкость инструмента(T), мин</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in experiment %}
+            <tr>
+                <td><a href="/material/{{i.mat_info.id}}/info">{{ i.Material }}</a></td>
+                <td>{{ i.Tool }}</td>
+                <td>{{ i.Coating }}</td>
+                <td>{{ i.SpindleSpeed }} </td>
+                <td>{{ i.FeedTable }} </td>
+                <td>{{ i.LengthPath }}</td>
+                <td>{{ i.Durability }}</td>
+                <td><a href="/experiments/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
+                <a href="/experiments/{{i.id}}/info"  class="btn btn-success">Подробнее</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

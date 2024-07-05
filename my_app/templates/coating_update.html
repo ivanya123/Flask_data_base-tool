@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+</style>
+<div class="container mt-5">
+    <h1>Износостойкое покрытие</h1>
+    <form method="post", class = row>
+        <div class="col">
+            <input type="text" name="Name1" id="Name1" value="{{ coating.Name }}" class="form-control" placeholder="Название покрытия">
+        </div>
+        <div class="col">
+            <input type="text" name="Name2" id="Name2" value="{{ coating.MaterialCoating }}" class="form-control" placeholder="Химический состав">
+        </div>
+        <div class="col">
+            <input type="text" name="Name3" id="Name3" value="{{ coating.TypeApplication }}" class="form-control" placeholder="Тип нанаесения">
+        </div>
+        <div class="col">
+            <input type="text" name="Color" id="Color" value="{{ coating.ColorCoating }}" class="form-control" placeholder="Цвет">
+        </div>
+        <div class="col">
+            <input type="text" name="Name4" id="Name4" value="{{ coating.MaxThickness }}" class="form-control" placeholder="Максимальная толщина">
+        </div>
+        <div class="col">
+            <input type="text" name="NameNano" id="NameNano" value="{{ coating.NanoHardness }}" class="form-control" placeholder="Микротвердость">
+        </div>
+        <div class="col">
+            <input type="text" name="NameResistnce" id="NameResistnce" value="{{ coating.TemratureResistance }}" class="form-control" placeholder="Температурное устойчивость">
+        </div>
+        <div class="col">
+            <input type="text" name="NameKoef" id="NameKoef" value="{{ coating.KoefficientFriction }}" class="form-control" placeholder="Коэффициент трения">
+        </div>
+        <div class="col">
+            <input type="submit" name = 'Button_2' class="btn btn-success" value="Подтвердить изменения">
+        </div>
+    </form>
+</div><br>
+
+{% endblock %}

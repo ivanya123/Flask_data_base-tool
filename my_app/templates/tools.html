@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+    h2 {
+        font-size: 16px;
+    }
+    .materials-table {
+        width: 100%; /* Ширина таблицы на 100% */
+        border-collapse: collapse; /* Объединяем границы ячеек */
+    }
+
+    .materials-table th, .materials-table td {
+        border: 1px solid #ccc; /* Границы ячеек и заголовков */
+        padding: 8px; /* Отступы внутри ячеек */
+    }
+
+    .materials-table th {
+        background-color: #f2f2f2; /* Цвет фона для заголовков */
+    }
+</style>
+<div class="container mt-5">
+    <h1> Таблица инструментов</h1>
+    <table class="materials-table">
+        <thead>
+            <tr>
+                <th>Инструмент</th>
+                <th>Материал инструмента</th>
+                <th>Количество зубьев</th>
+                <th>Диаметр фрезы</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in tools %}
+            <tr>
+                <td>{{ i.Name }}</td>
+                <td>{{ i.MaterialTool }}</td>
+                <td>{{ i.NumberTeeth }}</td>
+                <td>{{ i.Diameter }}</td>
+                <td><a href="/tool/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
+                <a href="/tool/{{i.id}}/update"  class="btn btn-success">Изменить</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

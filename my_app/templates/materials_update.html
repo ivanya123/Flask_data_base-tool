@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+</style>
+<div class="container mt-5">
+    <h1>Обрабатываемый материал</h1>
+    <form method="post", class = row>
+        <div class="col">
+            <input type="text" name="Name" id="Name" value="{{materials.Name}}" class="form-control" placeholder="Название материала">
+        </div>
+        <div class="col">
+            <input type="text" name="NameP" id="NameP" value="{{materials.PropPhysics}}" class="form-control" placeholder="Физические свойства">
+        </div>
+        <div class="col">
+            <input type="text" name="NameX" id="NameX" value="{{materials.Structure}}" class="form-control" placeholder="Химический состав">
+        </div>
+        <div class="col">
+            <input type="text" name="NamePr" id="NamePr" value="{{materials.Properties}}" class="form-control" placeholder="Свойства">
+        </div>
+        <div class="col">
+            <input type="text" name="NameGost" id="NameGost" value="{{materials.Gost}}" class="form-control" placeholder="Свойства">
+        </div>
+        <div class="col">
+            <input type="submit" name = 'Button_1' class="btn btn-success" value="Подтвердить изменения">
+        </div>
+    </form>
+</div><br>
+
+{% endblock %}
