@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecommendedSpeed
+from my_app.models import Material, Tool, Coating, Experiments, RecommendedSpeed
 import sqlalchemy as sa
 
 
@@ -83,8 +83,8 @@ def add():
                 number_teeth = int(request.form.get('Name8'))
                 diameter = float(request.form.get('Name9'))
 
-                new_tool = Toolsdate(Name=name_tool, MaterialTool=material_tool,
-                                     NumberTeeth=number_teeth, Diameter=diameter)
+                new_tool = Tool(Name=name_tool, MaterialTool=material_tool,
+                                NumberTeeth=number_teeth, Diameter=diameter)
 
                 db.session.add(new_tool)
                 db.session.commit()
@@ -183,13 +183,13 @@ def coat_info(id):
 
 @app.route('/tools')
 def tools_table():
-    tools = Toolsdate.query.order_by(Toolsdate.Name).all()
+    tools = Tool.query.order_by(Tool.Name).all()
     return render_template('tools.html', tools=tools)
 
 
 @app.route('/tool/<int:id>/delete')
 def delete_tool(id):
-    delete_str = Toolsdate.query.get_or_404(id)
+    delete_str = Tool.query.get_or_404(id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
@@ -200,7 +200,7 @@ def delete_tool(id):
 
 @app.route('/tool/<int:id>/update', methods=['GET', 'POST'])
 def tool_update(id):
-    tool = Toolsdate.query.get(id)
+    tool = Tool.query.get(id)
     if request.method == 'POST':
         tool.Name = request.form['Name5']
         tool.MaterialTool = request.form['Name6']
@@ -217,7 +217,7 @@ def tool_update(id):
 
 @app.route("/tool/<int:id>/info")
 def tools_info(id):
-    tool = Toolsdate.query.get_or_404(id)
+    tool = Tool.query.get_or_404(id)
     return render_template('tool_info.html', tool=tool)
 
 

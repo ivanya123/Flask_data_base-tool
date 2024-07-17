@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from my_app import db, app
-from my_app.models import Material, Coating, Toolsdate, Experiments, Csv_Files, RecommendedSpeed
+from my_app.models import Material, Coating, Tool, Experiments, Csv_Files, RecommendedSpeed
 import os
 import pandas as pd
 import shutil
@@ -85,7 +85,7 @@ def process_csv_files(file_path):
     list_parameters.append(id_csv)
     material = Material.query.filter_by(Name = list_parameters[0]).first()
     print(material.Name)
-    tool = Toolsdate.query.filter_by(Name = list_parameters[1]).first()
+    tool = Tool.query.filter_by(Name = list_parameters[1]).first()
     coating = Coating.query.filter_by(Name = list_parameters[2]).first()
 
     experiment = Experiments(Material=material.Name,
