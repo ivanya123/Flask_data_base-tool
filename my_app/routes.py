@@ -1,14 +1,14 @@
 from flask import Flask, render_template, request, redirect
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed
+from my_app.models import Material, Toolsdate, Coating, Experiments, RecommendedSpeed
 import sqlalchemy as sa
 
 
 @app.route('/')
 def select_parameters():
-    unique_materials = RecomededSpeed.query.with_entities(RecomededSpeed.Material).distinct().all()
-    unique_tools = RecomededSpeed.query.with_entities(RecomededSpeed.Tool).distinct().all()
-    unique_coatings = RecomededSpeed.query.with_entities(RecomededSpeed.Coating).distinct().all()
+    unique_materials = RecommendedSpeed.query.with_entities(RecommendedSpeed.Material).distinct().all()
+    unique_tools = RecommendedSpeed.query.with_entities(RecommendedSpeed.Tool).distinct().all()
+    unique_coatings = RecommendedSpeed.query.with_entities(RecommendedSpeed.Coating).distinct().all()
 
     return render_template('home.html', unique_materials=unique_materials, unique_tools=unique_tools,
                            unique_coatings=unique_coatings)
@@ -22,16 +22,16 @@ def recomended_speeds():
         tool = request.form['tool']
         coating = request.form['coating']
         if coating != 'None':
-            recomended_speed = RecomededSpeed.query.filter_by(Material=material,
-                                                              Tool=tool,
-                                                              Coating=coating).all()
+            recomended_speed = RecommendedSpeed.query.filter_by(Material=material,
+                                                                Tool=tool,
+                                                                Coating=coating).all()
         else:
-            recomended_speed = RecomededSpeed.query.filter_by(Material=material,
-                                                              Tool=tool).order_by(
-                sa.desc(RecomededSpeed.Durability)).all()
+            recomended_speed = RecommendedSpeed.query.filter_by(Material=material,
+                                                                Tool=tool).order_by(
+                sa.desc(RecommendedSpeed.Durability)).all()
 
     if request.method == 'GET':
-        recomended_speed = RecomededSpeed.query.all()
+        recomended_speed = RecommendedSpeed.query.all()
 
     return render_template('recomended_speed.html', recomended_speed=recomended_speed)
 

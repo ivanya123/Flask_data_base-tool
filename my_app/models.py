@@ -13,7 +13,7 @@ class Material(db.Model):
     Gost = db.Column(sa.String(64))
 
     experiment = so.relationship('Experiments', back_populates='mat_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='mat_info')
+    recommendation = so.relationship('RecomededSpeed', back_populates='mat_info')
 
     def __repr__(self):
         return '<Material {}>'.format(self.id)
@@ -41,7 +41,7 @@ class Toolsdate(db.Model):
     geometry = db.relationship('ToolGeometry', back_populates='tool')
 
     experiment = so.relationship('Experiments', back_populates='tools_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='tools_info')
+    recommendation = so.relationship('RecomededSpeed', back_populates='tools_info')
 
 
 class Coating(db.Model):
@@ -56,7 +56,7 @@ class Coating(db.Model):
     KoefficientFriction = db.Column(sa.Float)
 
     experiment = so.relationship('Experiments', back_populates='coat_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='coat_info')
+    recommendation = so.relationship('RecomededSpeed', back_populates='coat_info')
 
     def __repr__(self):
         return '<Coating {}>'.format(self.id)
@@ -109,7 +109,7 @@ class Experiments(db.Model):
         return '<Experiments {}>'.format(self.id)
 
 
-class RecomededSpeed(db.Model):
+class RecommendedSpeed(db.Model):
     Material = db.Column(sa.String(64), db.ForeignKey(Material.Name), nullable=False)
     Tool = db.Column(sa.String(64), db.ForeignKey(Toolsdate.Name), nullable=False)
     Coating = db.Column(sa.String(64), db.ForeignKey(Coating.Name), nullable=False)
@@ -119,9 +119,9 @@ class RecomededSpeed(db.Model):
     Hardening = db.Column(db.Float)
     Durability = db.Column(db.Float)
 
-    tools_info = so.relationship('Toolsdate', foreign_keys=[Tool], back_populates='recomend')
-    coat_info = so.relationship('Coating', foreign_keys=[Coating], back_populates='recomend')
-    mat_info = so.relationship('Material', foreign_keys=[Material], back_populates='recomend')
+    tools_info = so.relationship('Toolsdate', foreign_keys=[Tool], back_populates='recommendation')
+    coat_info = so.relationship('Coating', foreign_keys=[Coating], back_populates='recommendation')
+    mat_info = so.relationship('Material', foreign_keys=[Material], back_populates='recommendation')
 
     __table_args__ = (
         sa.PrimaryKeyConstraint('Material', 'Tool', 'Coating', name='recomended_speed_pk'),

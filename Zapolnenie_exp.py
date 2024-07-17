@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from my_app import db, app
-from my_app.models import Material, Coating, Toolsdate, Experiments, Csv_Files, RecomededSpeed
+from my_app.models import Material, Coating, Toolsdate, Experiments, Csv_Files, RecommendedSpeed
 import os
 import pandas as pd
 import shutil

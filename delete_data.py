@@ -2,7 +2,7 @@ import os
 from typing import Any
 
 from my_app import db,app
-from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating
+from my_app.models import Csv_Files, Experiments, RecommendedSpeed, Material,Toolsdate,Coating
 import pandas as pd
 import matplotlib.pyplot as plt
 import shutil
