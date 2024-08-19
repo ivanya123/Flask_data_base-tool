@@ -2,7 +2,7 @@ import os
 from typing import Any, List, Tuple
 
 from my_app import db,app
-from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating
+from my_app.models import Csv_Files, Experiments, RecommendedSpeed, Material,Tool,Coating
 import pandas as pd
 import matplotlib.pyplot as plt
 import shutil
@@ -104,7 +104,7 @@ def process_csv_files(file_path):
     id_csv_filter = Csv_Files.query.filter_by(filename_strengh=os.path.basename(file_path[0])).first()
     list_parameters.append(id_csv)
     material = Material.query.filter_by(Name = list_parameters[0]).first()
-    tool = Toolsdate.query.filter_by(Name = list_parameters[1]).first()
+    tool = Tool.query.filter_by(Name = list_parameters[1]).first()
     coating = Coating.query.filter_by(Name = list_parameters[2]).first()
 
     experiment = Experiments(Material=material.Name,
