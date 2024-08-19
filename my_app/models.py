@@ -13,7 +13,7 @@ class Material(db.Model):
     Gost = db.Column(sa.String(64))
 
     experiment = so.relationship('Experiments', back_populates='mat_info')
-    recommendation = so.relationship('RecomededSpeed', back_populates='mat_info')
+    recommendation = so.relationship('RecommendedSpeed', back_populates='mat_info')
 
     def __repr__(self):
         return '<Material {}>'.format(self.id)
