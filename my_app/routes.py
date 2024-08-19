@@ -223,8 +223,45 @@ def tools_info(id):
 
 @app.route('/experiments')
 def experiments_table():
-    experiments = Experiments.query.order_by(sa.desc(Experiments.LengthPath)).all()
-    return render_template('experiment.html', experiment=experiments)
+    material_filter = request.args.get('material', '')
+    coating_filter = request.args.get('coating', '')
+    spindle_min = request.args.get('spindle_min')
+    spindle_max = request.args.get('spindle_max')
+    feed_min = request.args.get('feed_min')
+    feed_max = request.args.get('feed_max')
+    sort_by = request.args.get('sort_by')
+    order = request.args.get('order', 'asc')
+
+    experiments_query = Experiments.query
+
+    if material_filter:
+        experiments_query = experiments_query.filter(Experiments.Material.ilike(f'%{material_filter}%'))
+
+    if coating_filter:
+        experiments_query = experiments_query.filter(Experiments.Coating.ilike(f'%{coating_filter}%'))
+
+    if spindle_min:
+        experiments_query = experiments_query.filter(Experiments.SpindleSpeed >= spindle_min)
+
+    if spindle_max:
+        experiments_query = experiments_query.filter(Experiments.SpindleSpeed <= spindle_max)
+
+    if feed_min:
+        experiments_query = experiments_query.filter(Experiments.FeedTable >= feed_min)
+
+    if feed_max:
+        experiments_query = experiments_query.filter(Experiments.FeedTable <= feed_max)
+
+    if sort_by:
+        if order == 'desc':
+            experiments_query = experiments_query.order_by(sa.desc(getattr(Experiments, sort_by)))
+        else:
+            experiments_query = experiments_query.order_by(sa.asc(getattr(Experiments, sort_by)))
+
+    experiments = experiments_query.all()
+
+    return render_template('experiment.html', experiment=experiments, sort_by=sort_by, order=order,
+                           request_args=request.args)
 
 
 @app.route("/experiments/<int:id>/info")

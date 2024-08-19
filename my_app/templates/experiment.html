@@ -24,14 +24,31 @@
 </style>
 <div class="container mt-5">
     <h1> Таблица материалов </h1>
+    <form method="get" action="{{ url_for('experiments_table') }}">
+        <input type="text" name="material" placeholder="Фильтр по материалу" value="{{ request_args.get('material', '') }}">
+        <input type="text" name="coating" placeholder="Фильтр по покрытию" value="{{ request_args.get('coating', '') }}">
+        <input type="number" name="spindle_min" placeholder="Мин обороты шпинделя" value="{{ request_args.get('spindle_min', '') }}">
+        <input type="number" name="spindle_max" placeholder="Макс обороты шпинделя" value="{{ request_args.get('spindle_max', '') }}">
+        <input type="number" name="feed_min" placeholder="Мин подача" value="{{ request_args.get('feed_min', '') }}">
+        <input type="number" name="feed_max" placeholder="Макс подача" value="{{ request_args.get('feed_max', '') }}">
+        <button type="submit">Фильтровать</button>
+    </form>
     <table class="materials-table">
         <thead>
             <tr>
                 <th>Обрабатываемый материал</th>
                 <th>Инструмент</th>
                 <th>Износостойкое покрытие</th>
-                <th>Обороты шпинделя(n), об/мин</th>
-                <th>Подача(s), мм/мин</th>
+                <th>
+                    <a href="{{ url_for('experiments_table', sort_by='SpindleSpeed', order='asc' if request_args.get('order') == 'desc' else 'desc', **request_args) }}">
+                        Обороты шпинделя(n), об/мин
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('experiments_table', sort_by='FeedTable', order='asc' if request_args.get('order') == 'desc' else 'desc', **request_args) }}">
+                        Подача(s), мм/мин
+                    </a>
+                </th>
                 <th>Пройденная длина обработки(L), мм</th>
                 <th>Стойкость инструмента(T), мин</th>
             </tr>
@@ -42,12 +59,13 @@
                 <td><a href="/material/{{i.mat_info.id}}/info">{{ i.Material }}</a></td>
                 <td>{{ i.Tool }}</td>
                 <td>{{ i.Coating }}</td>
-                <td>{{ i.SpindleSpeed }} </td>
-                <td>{{ i.FeedTable }} </td>
+                <td>{{ i.SpindleSpeed }}</td>
+                <td>{{ i.FeedTable }}</td>
                 <td>{{ i.LengthPath }}</td>
                 <td>{{ i.Durability }}</td>
-                <td><a href="/experiments/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
-                <a href="/experiments/{{i.id}}/info"  class="btn btn-success">Подробнее</a>
+                <td>
+                    <a href="/experiments/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
+                    <a href="/experiments/{{i.id}}/info" class="btn btn-success">Подробнее</a>
                 </td>
             </tr>
             {% endfor %}
