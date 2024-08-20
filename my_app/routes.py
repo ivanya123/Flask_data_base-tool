@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed
+from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive
 import sqlalchemy as sa
 
 
@@ -268,3 +268,9 @@ def experiments_table():
 def experiments_info(id):
     experiment = Experiments.query.get_or_404(id)
     return render_template('experiment_info.html', experiment=experiment)
+
+
+@app.route("/adhesive")
+def adhesive():
+    adhesive = Adhesive.query.all()
+    return render_template('adhesive.html', adhesive=adhesive)

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    h1 {
+        font-size: 24px;
+    }
+    h2 {
+        font-size: 16px;
+    }
+    .materials-table {
+        width: 100%; /* Ширина таблицы на 100% */
+        border-collapse: collapse; /* Объединяем границы ячеек */
+    }
+
+    .materials-table th, .materials-table td {
+        border: 1px solid #ccc; /* Границы ячеек и заголовков */
+        padding: 8px; /* Отступы внутри ячеек */
+    }
+
+    .materials-table th {
+        background-color: #f2f2f2; /* Цвет фона для заголовков */
+    }
+</style>
+<div class="container mt-5">
+    <h1> Триботехничские свойства </h1>
+    <table class="materials-table">
+        <thead>
+            <tr>
+                <th>Название материала</th>
+                <th>Название покрытия</th>
+                <th>Температура, &deg;С</th>
+                <th>&tau;<sub>nn</sub>, Мпа</th>
+                <th>P<sub>rn</sub>, Мпа</th>
+                <th>&tau;<sub>nn</sub> / P<sub>rn</sub></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in adhesive %}
+            <tr>
+                <td>{{ i.material }}</td>
+                <td>{{ i.coating }}</td>
+                <td>{{ i.temperature }}</td>
+                <td>{{ i.bond_strength_adhesive }} </td>
+                <td>{{ i.normal_shear_strength }} </td>
+                <td>{{ i.koefficient_shear }} </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
