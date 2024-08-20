@@ -140,3 +140,19 @@ class RecomededSpeed(db.Model):
         if self.tools_info:
             z = self.tools_info.NumberTeeth
             return self.FeedTable / (z * self.SpindleSpeed)
+
+
+class Adhesive(db.Model):
+    material = db.Column(sa.String(64), db.ForeignKey(Material.Name), nullable=False)
+    coating = db.Column(sa.String(64), db.ForeignKey(Coating.Name), nullable=False)
+    temperature = db.Column(sa.Integer, nullable=False)
+    bond_strength_adhesive = db.Column(sa.Float, nullable=False)
+    normal_shear_strength = db.Column(sa.Float, nullable=False)
+
+    @property
+    def koefficient_shear(self):
+        return self.bond_strength_adhesive / self.normal_shear_strength
+
+    __table_args__ = (
+        sa.PrimaryKeyConstraint('material', 'coating', 'temperature', name='adhesive_pk'),
+    )
