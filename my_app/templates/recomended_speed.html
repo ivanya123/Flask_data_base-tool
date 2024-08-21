@@ -32,9 +32,9 @@
                 <th>Покрытие</th>
                 <th>Обороты шпинделя, об/мин</th>
                 <th>Подача, мм/мин</th>
-                <th>Шероховатость, HRC</th>
+                <th>Шероховатость, Ra</th>
                 <th>Наклеп, мм</th>
-                <th>Микротвердость, HRC</th>
+                <th>Микротвердость, HB</th>
                 <th>Стойкость, мин</th>
             </tr>
         </thead>
@@ -48,7 +48,7 @@
                 <td>{{ i.FeedTable }}</td>
                 <td>{{ i.Roughness }}</td>
                 <td>{{ i.Hardening }}</td>
-                <td></td>
+                <td>{{ i.Microhardness }}</td>
                 <td>{{ i.Durability }} </td>
             </tr>
             {% endfor %}

@@ -14,6 +14,7 @@ class Material(db.Model):
 
     experiment = so.relationship('Experiments', back_populates='mat_info')
     recomend = so.relationship('RecomededSpeed', back_populates='mat_info')
+    adhesive = so.relationship('Adhesive', back_populates='mat_info')
 
     def __repr__(self):
         return '<Material {}>'.format(self.id)
@@ -57,6 +58,7 @@ class Coating(db.Model):
 
     experiment = so.relationship('Experiments', back_populates='coat_info')
     recomend = so.relationship('RecomededSpeed', back_populates='coat_info')
+    adhesive = so.relationship('Adhesive', back_populates='coat_info')
 
     def __repr__(self):
         return '<Coating {}>'.format(self.id)
@@ -118,6 +120,7 @@ class RecomededSpeed(db.Model):
     Roughness = db.Column(db.Float)
     Hardening = db.Column(db.Float)
     Durability = db.Column(db.Float)
+    Microhardness = db.Column(db.Float)
 
     tools_info = so.relationship('Toolsdate', foreign_keys=[Tool], back_populates='recomend')
     coat_info = so.relationship('Coating', foreign_keys=[Coating], back_populates='recomend')
@@ -149,6 +152,8 @@ class Adhesive(db.Model):
     bond_strength_adhesive = db.Column(sa.Float, nullable=False)
     normal_shear_strength = db.Column(sa.Float, nullable=False)
 
+    mat_info = so.relationship('Material', foreign_keys=[material], back_populates='adhesive')
+    coat_info = so.relationship('Coating', foreign_keys=[coating], back_populates='adhesive')
     @property
     def koefficient_shear(self):
         return self.bond_strength_adhesive / self.normal_shear_strength

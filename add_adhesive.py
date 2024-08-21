@@ -1,6 +1,7 @@
 from my_app import db,app
 from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating, Adhesive
 import csv
+import random
 
 
 app.app_context().push()
@@ -28,19 +29,14 @@ app.app_context().push()
 # for adhesive in all_adhesive:
 #     db.session.delete(adhesive)
 
-list_data = [(101.05, 1063),
-             (118.94, 991),
-             (129.47, 924),
-             (137.89, 907),
-             (141.05, 881)]
+# random.randint(160, 180)
+roughness = [0.8, 1.0, 1.6]
+recomeded_speed = RecomededSpeed.query.all()
 
-adhesive_vt41 = Adhesive.query.filter_by(material='ВТ41').filter_by(coating='nACRo+TiB2')
-k=0
-for adhesive in adhesive_vt41:
-    adhesive.bond_strength_adhesive = list_data[k][0]
-    adhesive.normal_shear_strength = list_data[k][1]
+for rec in recomeded_speed:
+    rec.Roughness = random.choice(roughness)
     db.session.commit()
-    k += 1
+
 
 
 
