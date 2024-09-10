@@ -274,3 +274,9 @@ def experiments_info(id):
 def adhesive():
     adhesive = Adhesive.query.all()
     return render_template('adhesive.html', adhesive=adhesive)
+
+
+
+@app.route("/expected_parameters")
+def expected_parameters():
+    return render_template('expected_parameters.html', material = 'ВТ18У', coating = 'nACo3', tool = "Фреза 6157-7005")

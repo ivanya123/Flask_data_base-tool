@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block tittle %}
+<style>
+    input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8px;
+        cursor: pointer;
+        background: #343a40; /* Цвет линии */
+        border-radius: 4px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .result {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .slider-container {
+        margin-bottom: 20px;
+    }
+    .value-container {
+        margin-top: -30px;
+        margin-bottom: 20px;
+    }
+</style>
+<div class="container">
+    <h1 class="mt-4">Параметры резания</h1>
+
+    <form>
+        <div class="form-group">
+            <label for="material">Материал</label>
+            <input type="text" class="form-control" id="material" value= {{material}} readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="tool">Инструмент</label>
+            <input type="text" class="form-control" id="tool" value={{tool}} readonly>
+        </div>
+
+        <div class="form-group">
+            <label for="coating">Покрытие</label>
+            <input type="text" class="form-control" id="coating" value={{coating}} readonly>
+        </div>
+
+        <div class="slider-container">
+            <label for="cutting_speed">Скорость резания (м/мин):</label>
+            <input type="range" class="form-range" id="cutting_speed" min="50" max="3000" value="2000" step="1" oninput="updateCalculations(this.value)">
+        </div>
+
+        <div class="value-container">
+            <span>Выбранная скорость резания: <span id="cutting_speed_value">100</span> м/мин</span>
+        </div>
+
+        <div class="result">
+            Сила резания: <span id="cutting_force">-</span> Н
+        </div>
+        <div class="result">
+            Длина пути инструмента: <span id="tool_length">-</span> мм
+        </div>
+        <div class="result">
+            Стойкость инструмента: <span id="tool_durability">-</span> мин
+        </div>
+    </form>
+</div>
+
+<script>
+    function calculateCuttingForce(speed) {
+        return speed * 1.5; // Простая формула для примера
+    }
+
+    function calculateToolLength(speed) {
+        return speed * 2.3; // Простая формула для примера
+    }
+
+    function calculateToolDurability(speed) {
+        return 100 / speed * 1000; // Простая формула для примера
+    }
+
+    function updateCalculations(cuttingSpeed) {
+        document.getElementById('cutting_speed_value').innerText = cuttingSpeed;
+
+        let cuttingForce = calculateCuttingForce(cuttingSpeed);
+        let toolLength = calculateToolLength(cuttingSpeed);
+        let toolDurability = calculateToolDurability(cuttingSpeed);
+
+        document.getElementById('cutting_force').innerText = cuttingForce.toFixed(2);
+        document.getElementById('tool_length').innerText = toolLength.toFixed(2);
+        document.getElementById('tool_durability').innerText = toolDurability.toFixed(2);
+    }
+
+    window.onload = function() {
+        updateCalculations(document.getElementById('cutting_speed').value);
+    };
+</script>
+{% endblock %}
