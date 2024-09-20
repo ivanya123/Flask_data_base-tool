@@ -20,77 +20,156 @@
         margin-bottom: 20px;
     }
     .value-container {
-        margin-top: -30px;
+        margin-top: -20px;
         margin-bottom: 20px;
     }
 </style>
+
 <div class="container">
     <h1 class="mt-4">Параметры резания</h1>
 
-    <form>
+    {% if not coefficient %}
+    <!-- Форма выбора параметров -->
+    <form method="POST">
         <div class="form-group">
             <label for="material">Материал</label>
-            <input type="text" class="form-control" id="material" value= {{material}} readonly>
+            <select class="form-control" id="material" name="material">
+                {% for material in materials %}
+                <option value="{{ material.id }}" {% if material.id == selected_material %}selected{% endif %}>
+                    {{ material.Name }} <a href = '/material/{{material.id}}/info'></a>
+                </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="form-group">
             <label for="tool">Инструмент</label>
-            <input type="text" class="form-control" id="tool" value={{tool}} readonly>
+            <select class="form-control" id="tool" name="tool">
+                {% for tool in tools %}
+                <option value="{{ tool.id }}" {% if tool.id == selected_tool %}selected{% endif %}>
+                    {{ tool.Name }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
 
         <div class="form-group">
             <label for="coating">Покрытие</label>
-            <input type="text" class="form-control" id="coating" value={{coating}} readonly>
+            <select class="form-control" id="coating" name="coating">
+                {% for coating in coatings %}
+                <option value="{{ coating.id }}" {% if coating.id == selected_coating %}selected{% endif %}>
+                    {{ coating.Name }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
 
-        <div class="slider-container">
-            <label for="cutting_speed">Скорость резания (м/мин):</label>
-            <input type="range" class="form-range" id="cutting_speed" min="50" max="3000" value="2000" step="1" oninput="updateCalculations(this.value)">
-        </div>
-
-        <div class="value-container">
-            <span>Выбранная скорость резания: <span id="cutting_speed_value">100</span> м/мин</span>
-        </div>
-
-        <div class="result">
-            Сила резания: <span id="cutting_force">-</span> Н
-        </div>
-        <div class="result">
-            Длина пути инструмента: <span id="tool_length">-</span> мм
-        </div>
-        <div class="result">
-            Стойкость инструмента: <span id="tool_durability">-</span> мин
-        </div>
+        <button type="submit" class="btn btn-primary">Рассчитать</button>
     </form>
+    {% else %}
+    <!-- Отображение результатов -->
+    <form method="POST">
+        <div class="form-group">
+            <label for="material">Материал</label>
+            <select class="form-control" id="material" name="material">
+                {% for material in materials %}
+                <option value="{{ material.id }}" {% if material.id == selected_material %}selected{% endif %}>
+                    {{ material.Name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tool">Инструмент</label>
+            <select class="form-control" id="tool" name="tool">
+                {% for tool in tools %}
+                <option value="{{ tool.id }}" {% if tool.id == selected_tool %}selected{% endif %}>
+                    {{ tool.Name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="coating">Покрытие</label>
+            <select class="form-control" id="coating" name="coating">
+                {% for coating in coatings %}
+                <option value="{{ coating.id }}" {% if coating.id == selected_coating %}selected{% endif %}>
+                    {{ coating.Name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Рассчитать</button>
+    </form>
+
+    <div class="slider-container">
+        <label for="cutting_speed">Скорость резания (V), м/мин:</label>
+        <input type="range" class="form-range" id="cutting_speed" min="10" max="200" value="75" step=0.5" oninput="updateCalculations()">
+        <div class="value-container">
+            Выбранная скорость резания: <span id="cutting_speed_value">1000</span> м/мин
+        </div>
+    </div>
+
+    <div class="slider-container">
+        <label for="feed_per_tooth">Подача на зуб (S), мм/зуб:</label>
+        <input type="range" class="form-range" id="feed_per_tooth" min="0.001" max="0.5" value="0.025" step="0.001" oninput="updateCalculations()">
+        <div class="value-container">
+            Выбранная подача на зуб: <span id="feed_per_tooth_value">0.001</span> мм/зуб
+        </div>
+    </div>
+
+    <div class="result">
+        Сила резания: <span id="cutting_force">-</span> Н
+    </div>
+    <div class="result">
+        Температура резания: <span id="cutting_temperature">-</span> °C
+    </div>
+    <div class="result">
+        Стойкость инструмента: <span id="tool_life">-</span> мин
+    </div>
+
+    <script>
+        // Коэффициенты, полученные из сервера
+        const Kc = {{ coefficient.cutting_force_coefficient }}; // Коэффициент силы резания
+        const Kt = {{ coefficient.cutting_temperature_coefficient }}; // Коэффициент температуры резания
+        const Kl = {{ coefficient.durability_coefficient }}; // Коэффициент стойкости инструмента
+
+        // Показатели степени (известны и фиксированы)
+        const a_force = -0.12;  // Показатель степени для скорости в формуле силы резания
+        const b_force = 0.95;  // Показатель степени для подачи в формуле силы резания
+
+        const a_temp = 0.4;   // Показатель степени для скорости в формуле температуры резания
+        const b_temp = 0.24;   // Показатель степени для подачи в формуле температуры резания
+
+        const a_life = -0.2;  // Показатель степени для скорости в формуле стойкости инструмента
+        const b_life = -0.15;  // Показатель степени для подачи в формуле стойкости инструмента
+
+        function updateCalculations() {
+            let V = parseFloat(document.getElementById('cutting_speed').value);
+            let S = parseFloat(document.getElementById('feed_per_tooth').value);
+
+            document.getElementById('cutting_speed_value').innerText = V;
+            document.getElementById('feed_per_tooth_value').innerText = S.toFixed(3);
+
+            // Расчет силы резания
+            let cuttingForce = Kc * Math.pow(V, a_force) * Math.pow(S, b_force);
+            document.getElementById('cutting_force').innerText = cuttingForce.toFixed(2);
+
+            // Расчет температуры резания
+            let cuttingTemperature = Kt * Math.pow(V, a_temp) * Math.pow(S, b_temp);
+            document.getElementById('cutting_temperature').innerText = cuttingTemperature.toFixed(2);
+
+            // Расчет стойкости инструмента
+            let toolLife = Kl * Math.pow(V, a_life) * Math.pow(S, b_life);
+            document.getElementById('tool_life').innerText = toolLife.toFixed(2);
+        }
+
+        // Инициализируем расчеты при загрузке страницы
+        window.onload = updateCalculations;
+    </script>
+    {% endif %}
 </div>
-
-<script>
-    function calculateCuttingForce(speed) {
-        return speed * 1.5; // Простая формула для примера
-    }
-
-    function calculateToolLength(speed) {
-        return speed * 2.3; // Простая формула для примера
-    }
-
-    function calculateToolDurability(speed) {
-        return 100 / speed * 1000; // Простая формула для примера
-    }
-
-    function updateCalculations(cuttingSpeed) {
-        document.getElementById('cutting_speed_value').innerText = cuttingSpeed;
-
-        let cuttingForce = calculateCuttingForce(cuttingSpeed);
-        let toolLength = calculateToolLength(cuttingSpeed);
-        let toolDurability = calculateToolDurability(cuttingSpeed);
-
-        document.getElementById('cutting_force').innerText = cuttingForce.toFixed(2);
-        document.getElementById('tool_length').innerText = toolLength.toFixed(2);
-        document.getElementById('tool_durability').innerText = toolDurability.toFixed(2);
-    }
-
-    window.onload = function() {
-        updateCalculations(document.getElementById('cutting_speed').value);
-    };
-</script>
 {% endblock %}

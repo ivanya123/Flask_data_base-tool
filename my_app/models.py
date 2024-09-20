@@ -154,6 +154,7 @@ class Adhesive(db.Model):
 
     mat_info = so.relationship('Material', foreign_keys=[material], back_populates='adhesive')
     coat_info = so.relationship('Coating', foreign_keys=[coating], back_populates='adhesive')
+
     @property
     def koefficient_shear(self):
         return self.bond_strength_adhesive / self.normal_shear_strength
@@ -161,3 +162,22 @@ class Adhesive(db.Model):
     __table_args__ = (
         sa.PrimaryKeyConstraint('material', 'coating', 'temperature', name='adhesive_pk'),
     )
+
+
+class Coefficients(db.Model):
+    __tablename__ = 'coefficients'
+
+    material_id = db.Column(db.Integer, db.ForeignKey('material.id'), primary_key=True, nullable=False)
+    coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'), primary_key=True, nullable=False)
+    tool_id = db.Column(db.Integer, db.ForeignKey('toolsdate.id'), primary_key=True, nullable=False)
+
+    cutting_force_coefficient = db.Column(db.Float, nullable=False)
+    cutting_temperature_coefficient = db.Column(db.Float, nullable=False)
+    durability_coefficient = db.Column(db.Float, nullable=False)
+
+    material = db.relationship('Material', backref=db.backref('coefficients', lazy='dynamic'))
+    tool = db.relationship('Toolsdate', backref=db.backref('coefficients', lazy='dynamic'))
+    coating = db.relationship('Coating', backref=db.backref('coefficients', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'{self.material.Name}-{self.tool.Name}-{self.coating.Name}-{self.cutting_force_coefficient};{self.cutting_temperature_coefficient};{self.durability_coefficient}'

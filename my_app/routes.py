@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive
+from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients
 import sqlalchemy as sa
 
 
@@ -277,6 +277,52 @@ def adhesive():
 
 
 
-@app.route("/expected_parameters")
+@app.route("/expected_parameters", methods=['GET', 'POST'])
 def expected_parameters():
-    return render_template('expected_parameters.html', material = 'ВТ18У', coating = 'nACo3', tool = "Фреза 6157-7005")
+    materials = Material.query.all()
+    tools = Toolsdate.query.all()
+    coatings = Coating.query.all()
+
+    selected_material = None
+    selected_tool = None
+    selected_coating = None
+    coefficient = None
+
+    if request.method == 'POST':
+        selected_material = int(request.form.get('material'))
+        selected_tool = int(request.form.get('tool'))
+        selected_coating = int(request.form.get('coating'))
+
+        # Извлекаем коэффициенты из базы данных на основе выбранных параметров
+        coefficient = Coefficients.query.filter_by(
+            material_id=selected_material,
+            tool_id=selected_tool,
+            coating_id=selected_coating
+        ).first()
+
+
+
+        if not coefficient:
+            error = "Не найдены коэффициенты для выбранных параметров."
+            return render_template(
+                'expected_parameters.html',
+                materials=materials,
+                tools=tools,
+                coatings=coatings,
+                selected_material=selected_material,
+                selected_tool=selected_tool,
+                selected_coating=selected_coating,
+                error=error
+            )
+
+
+    return render_template(
+        'expected_parameters.html',
+        materials=materials,
+        tools=tools,
+        coatings=coatings,
+        coefficient=coefficient,
+        selected_material=selected_material,
+        selected_tool=selected_tool,
+        selected_coating=selected_coating
+    )
