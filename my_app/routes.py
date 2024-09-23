@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect
+import sqlalchemy as sa
+from sqlalchemy.orm import load_only
+
+from my_app.forms import MaterialForm, CoatingForm, ToolForm
 from my_app import app, db
 from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients
-import sqlalchemy as sa
-
 
 @app.route('/')
 def select_parameters():
@@ -16,83 +18,82 @@ def select_parameters():
 
 @app.route('/recommended_speed', methods=['POST', 'GET'])
 def recomended_speeds():
-    recomended_speed = None
     if request.method == 'POST':
         material = request.form['material']
         tool = request.form['tool']
         coating = request.form['coating']
+        filters = {
+            RecomededSpeed.Material: material,
+            RecomededSpeed.Tool: tool,
+        }
         if coating != 'None':
-            recomended_speed = RecomededSpeed.query.filter_by(Material=material,
-                                                              Tool=tool,
-                                                              Coating=coating).all()
-        else:
-            recomended_speed = RecomededSpeed.query.filter_by(Material=material,
-                                                              Tool=tool).order_by(
-                sa.desc(RecomededSpeed.Durability)).all()
+            filters[RecomededSpeed.Coating] = coating
 
-    if request.method == 'GET':
-        recomended_speed = RecomededSpeed.query.all()
+        recomended_speed = RecomededSpeed.query.filter_by(**filters).options(
+            load_only(RecomededSpeed.Material, RecomededSpeed.Tool, RecomededSpeed.Coating,
+                      RecomededSpeed.SpindleSpeed, RecomededSpeed.FeedTable, RecomededSpeed.Durability)
+        ).order_by(sa.desc(RecomededSpeed.Durability)).all()
+
+    else:
+        recomended_speed = RecomededSpeed.query.options(
+            load_only(RecomededSpeed.Material, RecomededSpeed.Tool, RecomededSpeed.Coating,
+                      RecomededSpeed.SpindleSpeed, RecomededSpeed.FeedTable, RecomededSpeed.Durability)
+        ).all()
 
     return render_template('recomended_speed.html', recomended_speed=recomended_speed)
 
 
 @app.route('/add', methods=['POST', 'GET'])
 def add():
+    material_form = MaterialForm()
+    coating_form = CoatingForm()
+    tool_form = ToolForm()
+
     if request.method == 'POST':
         try:
-            if 'Button_1' in request.form:
-                # Обработка данных для первой формы
-                name_material = request.form.get('Name')
-                physic_material = request.form.get('NameP')
-                construct_material = request.form.get('NameX')
-                properties_material = request.form.get('NamePr')
-                gost = request.form.get('NameGost')
-
-                new_material = Material(Name=name_material, PropPhysics=physic_material, Structure=construct_material,
-                                        Properties=properties_material, Gost=gost)
-
+            if material_form.submit.data and material_form.validate_on_submit():
+                new_material = Material(
+                    name=material_form.name.data,
+                    prop_physics=material_form.prop_physics.data,
+                    structure=material_form.structure.data,
+                    properties=material_form.properties.data,
+                    gost=material_form.gost.data,
+                    type_id=material_form.type_id.data  # Сохранение типа материала
+                )
                 db.session.add(new_material)
                 db.session.commit()
                 return redirect('/add')
 
-            if 'Button_2' in request.form:
-                # Обработка данных для второй формы
-                name_coating = request.form.get('Name1')
-                coating_material = request.form.get('Name2')
-                type_application = request.form.get('Name3')
-                max_thikness = request.form.get('Name4')
-                nanohardness = request.form.get('NameNano')
-                tempresist = request.form.get('NameResistnce')
-                koefficient = request.form.get('NameKoef')
-                color = request.form.get('Color')
-
-                new_coating = Coating(Name=name_coating, MaterialCoating=coating_material,
-                                      TypeApplication=type_application,
-                                      MaxThickness=max_thikness, NanoHardness=nanohardness,
-                                      TemratureResistance=tempresist,
-                                      KoefficientFriction=koefficient, ColorCoating=color)
-
+            if coating_form.submit.data and coating_form.validate_on_submit():
+                new_coating = Coating(
+                    Name=coating_form.name.data,
+                    MaterialCoating=coating_form.material_coating.data,
+                    TypeApplication=coating_form.type_application.data,
+                    MaxThickness=coating_form.max_thickness.data,
+                    NanoHardness=coating_form.nanohardness.data,
+                    TemratureResistance=coating_form.temperature_resistance.data,
+                    KoefficientFriction=coating_form.koefficient_friction.data,
+                    ColorCoating=coating_form.color_coating.data
+                )
                 db.session.add(new_coating)
                 db.session.commit()
                 return redirect('/add')
 
-            if 'Button_3' in request.form:
-                # Обработка данных для третьей формы
-                name_tool = request.form.get('Name5')
-                material_tool = request.form.get('Name6')
-                number_teeth = int(request.form.get('Name8'))
-                diameter = float(request.form.get('Name9'))
-
-                new_tool = Toolsdate(Name=name_tool, MaterialTool=material_tool,
-                                     NumberTeeth=number_teeth, Diameter=diameter)
-
+            if tool_form.submit.data and tool_form.validate_on_submit():
+                new_tool = Toolsdate(
+                    Name=tool_form.name.data,
+                    MaterialTool=tool_form.material_tool.data,
+                    NumberTeeth=tool_form.number_teeth.data,
+                    Diameter=tool_form.diameter.data
+                )
                 db.session.add(new_tool)
                 db.session.commit()
                 return redirect('/add')
+
         except Exception as e:
             return f'Ошибка: {e}'
 
-    return render_template('add.html')
+    return render_template('add.html', material_form=material_form, coating_form=coating_form, tool_form=tool_form)
 
 
 @app.route('/materials')

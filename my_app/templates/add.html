@@ -5,46 +5,159 @@
     h1 {
         font-size: 24px;
     }
+
+    /* Контейнер для кнопок с использованием Flexbox */
+    .btn-container {
+        display: flex;
+        justify-content: space-between; /* Равномерное распределение кнопок */
+        margin-bottom: 15px;
+    }
+
+    /* Кнопки растягиваются равномерно */
+    .btn-toggle {
+        flex: 1; /* Растягиваем кнопки на всю ширину */
+        margin: 0 5px; /* Отступы между кнопками */
+    }
+
+    .form-container {
+        display: none; /* Скрываем контейнер формы */
+        margin-top: 15px;
+    }
 </style>
-<div class="container mt-5">
-    <h1>Обрабатываемый материал</h1>
-    <form method="post">
-        <input type="text" name="Name" class="form-control" value="{{ request.form.get('Name', '') }}" placeholder="Название материала">
-        <input type="text" name="NameP" class="form-control" value="{{ request.form.get('NameP', '') }}" placeholder="Физическо-механические свойства">
-        <input type="text" name="NameX" class="form-control" value="{{ request.form.get('NameX', '') }}" placeholder="Химический состав">
-        <input type="text" name="NamePr" class="form-control" value="{{ request.form.get('NamePr', '') }}" placeholder="Свойства">
-        <input type="text" name="NameGost" class="form-control" value="{{ request.form.get('NamePr', '') }}" placeholder="Гост">
-        <!-- Остальные поля для первой формы -->
-        <input type="submit" name="Button_1" class="btn btn-success" value="Добавить">
-    </form>
-</div><br>
 
 <div class="container mt-5">
-    <h1>Износостойкое покрытие</h1>
-    <form method="post">
-        <input type="text" name="Name1" class="form-control" value="{{ request.form.get('Name1', '') }}" placeholder="Название покрытия">
-        <input type="text" name="Name2" class="form-control" value="{{ request.form.get('Name2', '') }}" placeholder="Материал покрытия">
-        <input type="text" name="Name3" class="form-control" value="{{ request.form.get('Name3', '') }}" placeholder="Способ нанесения">
-        <input type="text" name="Color" class="form-control" value="{{ request.form.get('Color', '') }}" placeholder="Цвет">
-        <input type="text" name="Name4" class="form-control" value="{{ request.form.get('Name4', '') }}" placeholder="Максимальная толщина(Число)">
-        <input type="text" name="NameNano" class="form-control" value="{{ request.form.get('NameNano', '') }}" placeholder="Микротвердость">
-        <input type="text" name="NameResistnce" class="form-control" value="{{ request.form.get('NameResistnce', '') }}" placeholder="Температурное устойчивость">
-        <input type="text" name="NameKoef" class="form-control" value="{{ request.form.get('NameKoef', '') }}" placeholder="Коэффициент трения">
-        <input type="submit" name="Button_2" class="btn btn-success" value="Добавить">
-    </form>
-</div><br>
+    <h1>Добавить данные</h1>
 
-<div class="container mt-5">
-    <h1>Режущий инструмент</h1>
-    <form method="post">
-        <input type="text" name="Name5" class="form-control" value="{{ request.form.get('Name5', '') }}" placeholder="Название инструмента">
-        <input type="text" name="Name6" class="form-control" value="{{ request.form.get('Name6', '') }}" placeholder="Материал инструмента">
-        <input type="text" name="Name8" class="form-control" value="{{ request.form.get('Name8', '') }}" placeholder="Количество зубьев фрезы(целое число)">
-        <input type="text" name="Name9" class="form-control" value="{{ request.form.get('Name9', '') }}" placeholder="Диаметр(Число)">
-        <!-- Остальные поля для третьей формы -->
-        <input type="submit" name="Button_3" class="btn btn-success" value="Добавить">
-    </form>
-</div><br>
+    <!-- Контейнер для кнопок -->
+    <div class="btn-container">
+        <button class="btn btn-primary btn-toggle" onclick="toggleForm('material-form')">Добавить материал</button>
+        <button class="btn btn-primary btn-toggle" onclick="toggleForm('coating-form')">Добавить покрытие</button>
+        <button class="btn btn-primary btn-toggle" onclick="toggleForm('tool-form')">Добавить инструмент</button>
+    </div>
+
+    <!-- Форма для добавления материала -->
+    <div id="material-form" class="form-container">
+        <h2>Обрабатываемый материал</h2>
+        <form method="POST">
+            {{ material_form.hidden_tag() }}
+            <div class="form-group">
+                {{ material_form.name.label }}
+                {{ material_form.name(class="form-control", placeholder="Название материала") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.prop_physics.label }}
+                {{ material_form.prop_physics(class="form-control", placeholder="Физико-механические свойства") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.structure.label }}
+                {{ material_form.structure(class="form-control", placeholder="Химический состав") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.properties.label }}
+                {{ material_form.properties(class="form-control", placeholder="Свойства") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.gost.label }}
+                {{ material_form.gost(class="form-control", placeholder="ГОСТ") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.type_id.label }}
+                {{ material_form.type_id(class="form-control") }}
+            </div>
+            <div class="form-group">
+                {{ material_form.submit(class="btn btn-success", value="Добавить материал") }}
+            </div>
+        </form>
+    </div>
+
+    <!-- Форма для добавления покрытия -->
+    <div id="coating-form" class="form-container">
+        <h2>Износостойкое покрытие</h2>
+        <form method="POST">
+            {{ coating_form.hidden_tag() }}
+            <div class="form-group">
+                {{ coating_form.name.label }}
+                {{ coating_form.name(class="form-control", placeholder="Название покрытия") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.material_coating.label }}
+                {{ coating_form.material_coating(class="form-control", placeholder="Материал покрытия") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.type_application.label }}
+                {{ coating_form.type_application(class="form-control", placeholder="Способ нанесения") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.max_thickness.label }}
+                {{ coating_form.max_thickness(class="form-control", placeholder="Максимальная толщина") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.nanohardness.label }}
+                {{ coating_form.nanohardness(class="form-control", placeholder="Микротвердость") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.temperature_resistance.label }}
+                {{ coating_form.temperature_resistance(class="form-control", placeholder="Температурная устойчивость") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.koefficient_friction.label }}
+                {{ coating_form.koefficient_friction(class="form-control", placeholder="Коэффициент трения") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.color_coating.label }}
+                {{ coating_form.color_coating(class="form-control", placeholder="Цвет покрытия") }}
+            </div>
+            <div class="form-group">
+                {{ coating_form.submit(class="btn btn-success", value="Добавить покрытие") }}
+            </div>
+        </form>
+    </div>
+
+    <!-- Форма для добавления инструмента -->
+    <div id="tool-form" class="form-container">
+        <h2>Режущий инструмент</h2>
+        <form method="POST">
+            {{ tool_form.hidden_tag() }}
+            <div class="form-group">
+                {{ tool_form.name.label }}
+                {{ tool_form.name(class="form-control", placeholder="Название инструмента") }}
+            </div>
+            <div class="form-group">
+                {{ tool_form.material_tool.label }}
+                {{ tool_form.material_tool(class="form-control", placeholder="Материал инструмента") }}
+            </div>
+            <div class="form-group">
+                {{ tool_form.number_teeth.label }}
+                {{ tool_form.number_teeth(class="form-control", placeholder="Количество зубьев") }}
+            </div>
+            <div class="form-group">
+                {{ tool_form.diameter.label }}
+                {{ tool_form.diameter(class="form-control", placeholder="Диаметр") }}
+            </div>
+            <div class="form-group">
+                {{ tool_form.submit(class="btn btn-success", value="Добавить инструмент") }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JavaScript для переключения видимости форм и скрытия других -->
+<script>
+    function toggleForm(formId) {
+        var forms = document.getElementsByClassName('form-container');
+
+        // Скрыть все формы
+        for (var i = 0; i < forms.length; i++) {
+            forms[i].style.display = 'none';
+        }
+
+        // Показать только выбранную форму
+        var form = document.getElementById(formId);
+        if (form) {
+            form.style.display = 'block';
+        }
+    }
+</script>
 {% endblock %}
 
 

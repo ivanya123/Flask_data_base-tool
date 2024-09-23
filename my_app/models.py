@@ -11,10 +11,12 @@ class Material(db.Model):
     Structure = db.Column(sa.Text)
     Properties = db.Column(sa.String(120))
     Gost = db.Column(sa.String(64))
+    type_id = db.Column(db.Integer, db.ForeignKey('material_type.id'), nullable=False)
 
     experiment = so.relationship('Experiments', back_populates='mat_info')
     recomend = so.relationship('RecomededSpeed', back_populates='mat_info')
     adhesive = so.relationship('Adhesive', back_populates='mat_info')
+    type = db.relationship('MaterialType', back_populates='materials')
 
     def __repr__(self):
         return '<Material {}>'.format(self.id)
@@ -181,3 +183,12 @@ class Coefficients(db.Model):
 
     def __repr__(self):
         return f'{self.material.Name}-{self.tool.Name}-{self.coating.Name}-{self.cutting_force_coefficient};{self.cutting_temperature_coefficient};{self.durability_coefficient}'
+
+
+class MaterialType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(sa.String(64), unique=True, nullable=False)  # Название типа материала
+    materials = db.relationship('Material', back_populates='type')  # Связь с материалами
+
+    def __repr__(self):
+        return f'<MaterialType {self.name}>'
