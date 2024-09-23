@@ -1,10 +1,13 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import sqlalchemy as sa
 from sqlalchemy.orm import load_only
+from sqlalchemy import func
 
 from my_app.forms import MaterialForm, CoatingForm, ToolForm
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients
+from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients, \
+    MaterialType
+
 
 @app.route('/')
 def select_parameters():
@@ -52,13 +55,30 @@ def add():
     if request.method == 'POST':
         try:
             if material_form.submit.data and material_form.validate_on_submit():
+                if material_form.new_type.data:
+                    existing_type = MaterialType.query.filter_by(name=material_form.new_type.data).first()
+                    if existing_type:
+                        type_id = existing_type.id
+                    else:
+                        new_material_type = MaterialType(name=material_form.new_type.data)
+                        db.session.add(new_material_type)
+                        db.session.commit()
+                        type_id = new_material_type.id
+                else:
+                    type_id = material_form.type_id.data
+
+                if type_id == 0:
+                    material_form.type_id.errors.append('Пожалуйста, выберите тип материала или добавьте новый.')
+                    render_template('add.html', material_form=material_form, coating_form=coating_form,
+                                    tool_form=tool_form)
+
                 new_material = Material(
-                    name=material_form.name.data,
-                    prop_physics=material_form.prop_physics.data,
-                    structure=material_form.structure.data,
-                    properties=material_form.properties.data,
-                    gost=material_form.gost.data,
-                    type_id=material_form.type_id.data  # Сохранение типа материала
+                    Name=material_form.name.data,
+                    PropPhysics=material_form.prop_physics.data,
+                    Structure=material_form.structure.data,
+                    Properties=material_form.properties.data,
+                    Gost=material_form.gost.data,
+                    type_id=type_id  # Сохранение типа материала
                 )
                 db.session.add(new_material)
                 db.session.commit()
@@ -96,10 +116,58 @@ def add():
     return render_template('add.html', material_form=material_form, coating_form=coating_form, tool_form=tool_form)
 
 
-@app.route('/materials')
+@app.route('/materials', methods=['GET', 'POST'])
 def materials_table():
-    materials = Material.query.order_by(Material.Name).all()
-    return render_template('materials.html', materials=materials)
+    # Получаем все типы материалов для выпадающего списка
+    material_types = MaterialType.query.all()
+
+    # Параметры фильтрации и поиска
+    selected_type_id = request.args.get('type_id')
+    search_query = request.args.get('search_query')
+
+    # Базовый запрос
+    materials_query = Material.query
+
+    # Фильтрация по типу материала, если выбран
+    if selected_type_id and selected_type_id != 'all':
+        materials_query = materials_query.filter_by(type_id=selected_type_id)
+
+    # Поиск по названию материала
+    if search_query:
+        materials_query = materials_query.filter(Material.Name.ilike(f'%{search_query}%'))
+
+    # Получаем отсортированный список материалов
+    materials = materials_query.order_by(Material.Name).all()
+
+    return render_template('materials.html', materials=materials, material_types=material_types,
+                           selected_type_id=selected_type_id, search_query=search_query)
+
+
+@app.route('/materials/search')
+def search_materials():
+    search_query = request.args.get('search_query', '')
+    type_id = request.args.get('type_id', 'all')
+
+    materials = Material.query
+    # Ищем материалы, соответствующие запросу
+    if type_id != 'all':
+        materials = materials.filter_by(type_id=type_id)
+    if search_query:
+        filtered_materials = [material for material in materials.all() if search_query.lower() in material.Name.lower()]
+    else:
+        filtered_materials = materials.all()
+
+    # Преобразуем результат в список словарей
+    materials_list = [{
+        'id': material.id,
+        'name': material.Name,
+        'prop_physics': material.PropPhysics,
+        'structure': material.Structure,
+        'properties': material.Properties,
+        'gost': material.Gost
+    } for material in filtered_materials]
+
+    return jsonify(materials_list)
 
 
 @app.route('/materials/<int:id>/delete')
@@ -117,7 +185,7 @@ def delete_materials(id):
 def materials_update(id):
     materials = Material.query.get_or_404(id)
     if request.method == 'POST':
-        materials.Name = request.form['Name']
+        materials.name = request.form['Name']
         materials.PropPhysics = request.form['NameP']
         materials.Structure = request.form['NameX']
         materials.Properties = request.form['NamePr']
@@ -277,7 +345,6 @@ def adhesive():
     return render_template('adhesive.html', adhesive=adhesive)
 
 
-
 @app.route("/expected_parameters", methods=['GET', 'POST'])
 def expected_parameters():
     materials = Material.query.all()
@@ -301,8 +368,6 @@ def expected_parameters():
             coating_id=selected_coating
         ).first()
 
-
-
         if not coefficient:
             error = "Не найдены коэффициенты для выбранных параметров."
             return render_template(
@@ -315,7 +380,6 @@ def expected_parameters():
                 selected_coating=selected_coating,
                 error=error
             )
-
 
     return render_template(
         'expected_parameters.html',

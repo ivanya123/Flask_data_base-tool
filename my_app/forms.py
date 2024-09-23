@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SubmitField, SelectField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 from my_app.models import MaterialType
 
@@ -11,6 +11,7 @@ class MaterialForm(FlaskForm):
     properties = StringField('Свойства')
     gost = StringField('ГОСТ')
     type_id = SelectField('Тип материала', coerce=int, validators=[DataRequired()])  # Поле для выбора типа материала
+    new_type = StringField('Добавить новый тип материала', validators=[Optional()])
     submit = SubmitField('Добавить материал')
 
     def __init__(self, *args, **kwargs):

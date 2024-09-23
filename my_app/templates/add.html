@@ -65,6 +65,10 @@
                 {{ material_form.type_id(class="form-control") }}
             </div>
             <div class="form-group">
+                {{ material_form.new_type.label }}
+                {{ material_form.new_type(class="form-control") }}
+            </div>
+            <div class="form-group">
                 {{ material_form.submit(class="btn btn-success", value="Добавить материал") }}
             </div>
         </form>

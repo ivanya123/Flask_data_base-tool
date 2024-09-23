@@ -182,7 +182,12 @@ class Coefficients(db.Model):
     coating = db.relationship('Coating', backref=db.backref('coefficients', lazy='dynamic'))
 
     def __repr__(self):
-        return f'{self.material.Name}-{self.tool.Name}-{self.coating.Name}-{self.cutting_force_coefficient};{self.cutting_temperature_coefficient};{self.durability_coefficient}'
+        return (f'{self.material.Name}-'
+                f'{self.tool.Name}-'
+                f'{self.coating.Name}-'
+                f'{self.cutting_force_coefficient};'
+                f'{self.cutting_temperature_coefficient};'
+                f'{self.durability_coefficient}')
 
 
 class MaterialType(db.Model):
