@@ -169,6 +169,63 @@ def search_materials():
 
     return jsonify(materials_list)
 
+@app.route('/materials/by_type/<int:type_id>')
+def get_materials_by_type(type_id):
+    # Получаем материалы, соответствующие выбранному типу
+    materials = Material.query.filter_by(type_id=type_id).all()
+    # Преобразуем материалы в список словарей
+    materials_list = [{'id': material.id, 'name': material.Name} for material in materials]
+    return jsonify(materials_list)
+
+
+@app.route('/calculate')
+def calculate():
+    material_id = request.args.get('material_id')
+    tool_id = request.args.get('tool_id')
+    coating_id = request.args.get('coating_id')
+    cutting_speed = float(request.args.get('cutting_speed', 0))
+    feed_per_tooth = float(request.args.get('feed_per_tooth', 0))
+
+    # Получаем коэффициенты из базы данных
+    coefficient = Coefficients.query.filter_by(
+        material_id=material_id,
+        tool_id=tool_id,
+        coating_id=coating_id
+    ).first()
+
+    # Если коэффициенты не найдены, возвращаем пустой результат
+    if not coefficient:
+        return jsonify({
+            'cutting_force': 0,
+            'cutting_temperature': 0,
+            'tool_life': 0
+        })
+
+    # Показатели степени (известны и фиксированы)
+    a_force = -0.12
+    b_force = 0.95
+    a_temp = 0.4
+    b_temp = 0.24
+    a_life = -0.2
+    b_life = -0.15
+
+    # Расчет силы резания
+    cutting_force = coefficient.cutting_force_coefficient * (cutting_speed ** a_force) * (feed_per_tooth ** b_force)
+
+    # Расчет температуры резания
+    cutting_temperature = coefficient.cutting_temperature_coefficient * (cutting_speed ** a_temp) * (feed_per_tooth ** b_temp)
+
+    # Расчет стойкости инструмента
+    tool_life = coefficient.durability_coefficient * (cutting_speed ** a_life) * (feed_per_tooth ** b_life)
+
+    return jsonify({
+        'cutting_force': cutting_force,
+        'cutting_temperature': cutting_temperature,
+        'tool_life': tool_life
+    })
+
+
+
 
 @app.route('/materials/<int:id>/delete')
 def delete_materials(id):
@@ -350,36 +407,13 @@ def expected_parameters():
     materials = Material.query.all()
     tools = Toolsdate.query.all()
     coatings = Coating.query.all()
+    material_types = MaterialType.query.all()
 
     selected_material = None
     selected_tool = None
     selected_coating = None
     coefficient = None
 
-    if request.method == 'POST':
-        selected_material = int(request.form.get('material'))
-        selected_tool = int(request.form.get('tool'))
-        selected_coating = int(request.form.get('coating'))
-
-        # Извлекаем коэффициенты из базы данных на основе выбранных параметров
-        coefficient = Coefficients.query.filter_by(
-            material_id=selected_material,
-            tool_id=selected_tool,
-            coating_id=selected_coating
-        ).first()
-
-        if not coefficient:
-            error = "Не найдены коэффициенты для выбранных параметров."
-            return render_template(
-                'expected_parameters.html',
-                materials=materials,
-                tools=tools,
-                coatings=coatings,
-                selected_material=selected_material,
-                selected_tool=selected_tool,
-                selected_coating=selected_coating,
-                error=error
-            )
 
     return render_template(
         'expected_parameters.html',
@@ -389,5 +423,37 @@ def expected_parameters():
         coefficient=coefficient,
         selected_material=selected_material,
         selected_tool=selected_tool,
-        selected_coating=selected_coating
+        selected_coating=selected_coating,
+        material_types=material_types
     )
+
+@app.route('/update_graph_data', methods=['POST'])
+def update_graph_data():
+    data = request.json
+    material_id = data.get('material_id')
+    tool_id = data.get('tool_id')
+    coating_id = data.get('coating_id')
+    cutting_speed = float(data.get('cutting_speed', 0))
+    feed_per_tooth = float(data.get('feed_per_tooth', 0))
+    selected_parameter = data.get('selected_parameter')  # Получаем выбранный параметр
+    print(selected_parameter)
+    coefficient = Coefficients.query.filter_by(
+        material_id=material_id,
+        tool_id=tool_id,
+        coating_id=coating_id
+    ).first()
+
+    if not coefficient:
+        app.config['GRAPH_DATA'] = {}
+    else:
+        app.config['GRAPH_DATA'] = {
+            'cutting_speed': cutting_speed,
+            'feed_per_tooth': feed_per_tooth,
+            'cutting_force_coefficient': coefficient.cutting_force_coefficient,
+            'cutting_temperature_coefficient': coefficient.cutting_temperature_coefficient,
+            'durability_coefficient': coefficient.durability_coefficient,
+            'selected_parameter': selected_parameter  # Сохраняем текущий выбранный параметр
+        }
+
+    return jsonify({'status': 'success'})
+

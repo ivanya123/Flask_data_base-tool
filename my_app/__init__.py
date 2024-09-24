@@ -9,3 +9,6 @@ db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 from my_app import routes, models
+from my_app.dash_pack import create_dash
+
+create_dash(app)

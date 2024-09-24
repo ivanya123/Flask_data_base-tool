@@ -23,22 +23,55 @@
         margin-top: -20px;
         margin-bottom: 20px;
     }
+    .results-container {
+        display: flex; /* Размещаем результаты в одну строку */
+        justify-content: space-between; /* Пространство между блоками */
+        align-items: center; /* Выравниваем элементы по центру */
+        border-top: 1px solid #ccc; /* Верхняя граница */
+        border-bottom: 1px solid #ccc; /* Нижняя граница */
+        padding: 10px 0; /* Отступы сверху и снизу */
+        margin-top: 20px; /* Отступ сверху */
+    }
+    .result-block {
+        flex: 1; /* Равное распределение ширины между блоками */
+        text-align: center; /* Центровка текста */
+        padding: 0 10px; /* Отступы внутри блока */
+        position: relative; /* Позиционирование для псевдоэлемента */
+    }
+    .result-block:not(:last-child)::after {
+        content: ''; /* Пустой контент для разделителя */
+        position: absolute; /* Абсолютное позиционирование */
+        top: 0;
+        right: 0; /* Линия справа от блока */
+        width: 1px; /* Ширина линии */
+        height: 100%; /* Высота линии на всю высоту блока */
+        background-color: #ccc; /* Цвет разделительной линии */
+    }
 </style>
 
 <div class="container">
     <h1 class="mt-4">Параметры резания</h1>
 
-    {% if not coefficient %}
     <!-- Форма выбора параметров -->
     <form method="POST">
+        <!-- Выпадающий список для выбора типа материала -->
         <div class="form-group">
-            <label for="material">Материал</label>
-            <select class="form-control" id="material" name="material">
-                {% for material in materials %}
-                <option value="{{ material.id }}" {% if material.id == selected_material %}selected{% endif %}>
-                    {{ material.Name }} <a href = '/material/{{material.id}}/info'></a>
+            <label for="material_type">Тип материала</label>
+            <select class="form-control" id="material_type" name="material_type">
+                <option value="">Выберите тип материала</option>
+                {% for type in material_types %}
+                <option value="{{ type.id }}" {% if type.id == selected_type %}selected{% endif %}>
+                    {{ type.name }}
                 </option>
                 {% endfor %}
+            </select>
+        </div>
+
+        <!-- Выпадающий список для выбора материала -->
+        <div class="form-group">
+            <label for="material">Материал</label>
+            <select class="form-control" id="material" name="material" disabled>
+                <option value="">Сначала выберите тип материала</option>
             </select>
         </div>
 
@@ -63,113 +96,150 @@
                 {% endfor %}
             </select>
         </div>
-
-        <button type="submit" class="btn btn-primary">Рассчитать</button>
-    </form>
-    {% else %}
-    <!-- Отображение результатов -->
-    <form method="POST">
-        <div class="form-group">
-            <label for="material">Материал</label>
-            <select class="form-control" id="material" name="material">
-                {% for material in materials %}
-                <option value="{{ material.id }}" {% if material.id == selected_material %}selected{% endif %}>
-                    {{ material.Name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="tool">Инструмент</label>
-            <select class="form-control" id="tool" name="tool">
-                {% for tool in tools %}
-                <option value="{{ tool.id }}" {% if tool.id == selected_tool %}selected{% endif %}>
-                    {{ tool.Name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="coating">Покрытие</label>
-            <select class="form-control" id="coating" name="coating">
-                {% for coating in coatings %}
-                <option value="{{ coating.id }}" {% if coating.id == selected_coating %}selected{% endif %}>
-                    {{ coating.Name }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Рассчитать</button>
     </form>
 
+    <!-- Ползунки для скорости резания и подачи на зуб -->
     <div class="slider-container">
         <label for="cutting_speed">Скорость резания (V), м/мин:</label>
-        <input type="range" class="form-range" id="cutting_speed" min="10" max="200" value="75" step=0.5" oninput="updateCalculations()">
+        <input type="range" class="form-range" id="cutting_speed" min="10" max="200" value="75" step="1">
         <div class="value-container">
-            Выбранная скорость резания: <span id="cutting_speed_value">1000</span> м/мин
+            Выбранная скорость резания: <span id="cutting_speed_value">75</span> м/мин
         </div>
     </div>
 
     <div class="slider-container">
         <label for="feed_per_tooth">Подача на зуб (S), мм/зуб:</label>
-        <input type="range" class="form-range" id="feed_per_tooth" min="0.001" max="0.5" value="0.025" step="0.001" oninput="updateCalculations()">
+        <input type="range" class="form-range" id="feed_per_tooth" min="0.001" max="0.5" value="0.025" step="0.001">
         <div class="value-container">
-            Выбранная подача на зуб: <span id="feed_per_tooth_value">0.001</span> мм/зуб
+            Выбранная подача на зуб: <span id="feed_per_tooth_value">0.025</span> мм/зуб
         </div>
     </div>
 
-    <div class="result">
-        Сила резания: <span id="cutting_force">-</span> Н
+    <!-- Отображение результатов расчета -->
+    <div class="results-container">
+        <div class="result-block">
+            Сила резания: <span id="cutting_force">-</span> Н
+        </div>
+        <div class="result-block">
+            Температура резания: <span id="cutting_temperature">-</span> °C
+        </div>
+        <div class="result-block">
+            Стойкость инструмента: <span id="tool_life">-</span> мин
+        </div>
     </div>
-    <div class="result">
-        Температура резания: <span id="cutting_temperature">-</span> °C
+    <div id="dash-container">
+        <iframe src="/dash/" width="100%" height="600px" frameborder="0"></iframe>
     </div>
-    <div class="result">
-        Стойкость инструмента: <span id="tool_life">-</span> мин
-    </div>
-
+        <input type="hidden" id="current_parameter" value="cutting_temperature">
     <script>
-        // Коэффициенты, полученные из сервера
-        const Kc = {{ coefficient.cutting_force_coefficient }}; // Коэффициент силы резания
-        const Kt = {{ coefficient.cutting_temperature_coefficient }}; // Коэффициент температуры резания
-        const Kl = {{ coefficient.durability_coefficient }}; // Коэффициент стойкости инструмента
+        document.addEventListener('DOMContentLoaded', function() {
+    var materialTypeSelect = document.getElementById('material_type');
+    var materialSelect = document.getElementById('material');
+    var toolSelect = document.getElementById('tool');
+    var coatingSelect = document.getElementById('coating');
+    var cuttingSpeedSlider = document.getElementById('cutting_speed');
+    var feedPerToothSlider = document.getElementById('feed_per_tooth');
+    var parameterDropdown = document.getElementById('parameter-dropdown');
+    var currentParameterInput = document.getElementById('current_parameter');
 
-        // Показатели степени (известны и фиксированы)
-        const a_force = -0.12;  // Показатель степени для скорости в формуле силы резания
-        const b_force = 0.95;  // Показатель степени для подачи в формуле силы резания
+    // Обработчик изменения типа материала
+    materialTypeSelect.addEventListener('change', function() {
+        updateMaterialOptions();
+    });
 
-        const a_temp = 0.4;   // Показатель степени для скорости в формуле температуры резания
-        const b_temp = 0.24;   // Показатель степени для подачи в формуле температуры резания
+    // Обработчики изменений для всех элементов формы
+    materialSelect.addEventListener('change', updateCalculations);
+    toolSelect.addEventListener('change', updateCalculations);
+    coatingSelect.addEventListener('change', updateCalculations);
+    cuttingSpeedSlider.addEventListener('input', updateCalculations);
+    feedPerToothSlider.addEventListener('input', updateCalculations);
 
-        const a_life = -0.2;  // Показатель степени для скорости в формуле стойкости инструмента
-        const b_life = -0.15;  // Показатель степени для подачи в формуле стойкости инструмента
+    // Обработчик изменения параметра на графике
+    parameterDropdown.addEventListener('change', function() {
+        currentParameterInput.value = parameterDropdown.value; // Сохранение текущего выбранного параметра
+        updateGraph(); // Обновление графика при изменении выбранного параметра
+    });
 
-        function updateCalculations() {
-            let V = parseFloat(document.getElementById('cutting_speed').value);
-            let S = parseFloat(document.getElementById('feed_per_tooth').value);
+    function updateMaterialOptions() {
+        var typeId = materialTypeSelect.value;
 
-            document.getElementById('cutting_speed_value').innerText = V;
-            document.getElementById('feed_per_tooth_value').innerText = S.toFixed(3);
-
-            // Расчет силы резания
-            let cuttingForce = Kc * Math.pow(V, a_force) * Math.pow(S, b_force);
-            document.getElementById('cutting_force').innerText = cuttingForce.toFixed(2);
-
-            // Расчет температуры резания
-            let cuttingTemperature = Kt * Math.pow(V, a_temp) * Math.pow(S, b_temp);
-            document.getElementById('cutting_temperature').innerText = cuttingTemperature.toFixed(2);
-
-            // Расчет стойкости инструмента
-            let toolLife = Kl * Math.pow(V, a_life) * Math.pow(S, b_life);
-            document.getElementById('tool_life').innerText = toolLife.toFixed(2);
+        if (typeId) {
+            fetch(`/materials/by_type/${typeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    materialSelect.innerHTML = '<option value="">Выберите материал</option>';
+                    data.forEach(material => {
+                        var option = document.createElement('option');
+                        option.value = material.id;
+                        option.textContent = material.name;
+                        materialSelect.appendChild(option);
+                    });
+                    materialSelect.disabled = false;
+                });
+        } else {
+            materialSelect.innerHTML = '<option value="">Сначала выберите тип материала</option>';
+            materialSelect.disabled = true;
         }
 
-        // Инициализируем расчеты при загрузке страницы
-        window.onload = updateCalculations;
+        updateCalculations();
+    }
+
+    function updateCalculations() {
+        var materialId = materialSelect.value;
+        var toolId = toolSelect.value;
+        var coatingId = coatingSelect.value;
+        var cuttingSpeed = cuttingSpeedSlider.value;
+        var feedPerTooth = feedPerToothSlider.value;
+
+        if (materialId && toolId && coatingId) {
+            fetch(`/calculate?material_id=${materialId}&tool_id=${toolId}&coating_id=${coatingId}&cutting_speed=${cuttingSpeed}&feed_per_tooth=${feedPerTooth}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('cutting_speed_value').innerText = cuttingSpeed;
+                    document.getElementById('feed_per_tooth_value').innerText = parseFloat(feedPerTooth).toFixed(3);
+                    document.getElementById('cutting_force').innerText = data.cutting_force.toFixed(2);
+                    document.getElementById('cutting_temperature').innerText = data.cutting_temperature.toFixed(2);
+                    document.getElementById('tool_life').innerText = data.tool_life.toFixed(2);
+
+                    updateGraph();
+                });
+        } else {
+            document.getElementById('cutting_force').innerText = '-';
+            document.getElementById('cutting_temperature').innerText = '-';
+            document.getElementById('tool_life').innerText = '-';
+        }
+    }
+
+    function updateGraph() {
+        var materialId = materialSelect.value;
+        var toolId = toolSelect.value;
+        var coatingId = coatingSelect.value;
+        var cuttingSpeed = cuttingSpeedSlider.value;
+        var feedPerTooth = feedPerToothSlider.value;
+        var selectedParameter = currentParameterInput.value; // Получаем текущий выбранный параметр
+
+        fetch(`/update_graph_data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                material_id: materialId,
+                tool_id: toolId,
+                coating_id: coatingId,
+                cutting_speed: cuttingSpeed,
+                feed_per_tooth: feedPerTooth,
+                selected_parameter: selectedParameter // Отправляем текущий параметр на сервер
+            })
+        }).then(() => {
+            var iframe = document.querySelector('#dash-container iframe');
+            iframe.src = iframe.src; // Перезагрузка iframe для обновления графика
+        });
+    }
+
+    updateCalculations();
+});
+
     </script>
-    {% endif %}
 </div>
 {% endblock %}
