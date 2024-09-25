@@ -123,7 +123,7 @@ def materials_table():
 
     # Параметры фильтрации и поиска
     selected_type_id = request.args.get('type_id')
-    search_query = request.args.get('search_query')
+    search_query = request.args.get('search_query', '')
 
     # Базовый запрос
     materials_query = Material.query
@@ -447,6 +447,10 @@ def update_graph_data():
     tool_id = data.get('tool_id')
     coating_id = data.get('coating_id')
 
+    tool = Toolsdate.query.get(tool_id)
+    diameter = tool.Diameter
+    count_of_teeth = tool.NumberTeeth
+
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
         tool_id=tool_id,
@@ -459,7 +463,9 @@ def update_graph_data():
         app.config['GRAPH_DATA'] = {
             'cutting_force_coefficient': coefficient.cutting_force_coefficient,
             'cutting_temperature_coefficient': coefficient.cutting_temperature_coefficient,
-            'durability_coefficient': coefficient.durability_coefficient
+            'durability_coefficient': coefficient.durability_coefficient,
+            'diameter': diameter,
+            'teeth_count': count_of_teeth,
         }
 
     return jsonify({'status': 'success'})

@@ -1,8 +1,7 @@
 from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objs as go
-import flask
-import json
 import numpy as np
+
 
 def create_dash(flask_app):
     dash_app = Dash(server=flask_app, url_base_pathname='/dash/')
@@ -23,6 +22,10 @@ def create_dash(flask_app):
             html.Div(className='result-block', children=[
                 html.Span('Стойкость инструмента: ', className='result'),
                 html.Span(id='tool_life', children='-')
+            ]),
+            html.Div(className='result-block', children=[
+                html.Span('Пройденный путь: ', className='result'),
+                html.Span(id='length_processing', children='-')
             ])
         ]),
 
@@ -34,7 +37,8 @@ def create_dash(flask_app):
                 options=[
                     {'label': 'Сила резания', 'value': 'cutting_force'},
                     {'label': 'Температура резания', 'value': 'cutting_temperature'},
-                    {'label': 'Стойкость инструмента', 'value': 'tool_life'}
+                    {'label': 'Стойкость инструмента', 'value': 'tool_life'},
+                    {'label': 'Пройденный путь', 'value': 'length_processing'}
                 ],
                 value='cutting_force',
                 className='form-control'
@@ -60,7 +64,7 @@ def create_dash(flask_app):
                         html.Div('Выбранная скорость резания: ', style={'display': 'inline'}),
                         html.Span(id='cutting_speed_value', children='75', className='result'),
                         html.Span(' м/мин'),
-                    dcc.Graph(id='graph_speed')
+                        dcc.Graph(id='graph_speed')
                     ])
                 ])
             ]),
@@ -95,13 +99,13 @@ def create_dash(flask_app):
          Output('cutting_force', 'children'),
          Output('cutting_temperature', 'children'),
          Output('tool_life', 'children'),
+         Output('length_processing', 'children'),
          Output('cutting_speed_value', 'children'),
          Output('feed_per_tooth_value', 'children')],
         [Input('parameter-dropdown', 'value'),
          Input('slider_speed', 'value'),
          Input('slider_s', 'value')]
     )
-
     def update_graph_and_calculations(selected_parameter, speed_slider, supply_slider):
         # Получаем коэффициенты из `flask_app.config`
         graph_data = flask_app.config.get('GRAPH_DATA', {})
@@ -114,11 +118,14 @@ def create_dash(flask_app):
             cutting_force = '-'
             cutting_temperature = '-'
             tool_life = '-'
+            length_processing = '-'
         else:
             # Извлекаем коэффициенты
             Kc = graph_data.get('cutting_force_coefficient', 1)
             Kt = graph_data.get('cutting_temperature_coefficient', 1)
             Kl = graph_data.get('durability_coefficient', 1)
+            diameter = graph_data.get('diameter', 1)
+            teeth_count = graph_data.get('teeth_count', 1)
 
             # Показатели степени
             a_force = -0.12
@@ -132,6 +139,13 @@ def create_dash(flask_app):
             speed_values = np.arange(10, 201, 1)
             supply_values = np.arange(0.001, 0.501, 0.001)
 
+            rotation_per_minute = speed_values * 1000 / 3.14 * diameter
+            feed_minute_massive = supply_slider * rotation_per_minute * teeth_count
+
+            rotation_stat = speed_slider * 1000 / 3.14 * diameter
+            # Массив значений на которое надо умножить время для получения расстояния
+            supply_values_minute = supply_values * rotation_stat * teeth_count
+
             # Вычисление значений для графиков
             if selected_parameter == 'cutting_force':
                 values_of_speed = Kc * (speed_values ** a_force) * (supply_slider ** b_force)
@@ -141,10 +155,15 @@ def create_dash(flask_app):
                 values_of_speed = Kt * (speed_values ** a_temp) * (supply_slider ** b_temp)
                 values_of_supply = Kt * (speed_slider ** a_temp) * (supply_values ** b_temp)
                 y_axis_title = 'Температура резания (°C)'
-            else:
+            elif selected_parameter == 'tool_life':
                 values_of_speed = Kl * (speed_values ** a_life) * (supply_slider ** b_life)
                 values_of_supply = Kl * (speed_slider ** a_life) * (supply_values ** b_life)
                 y_axis_title = 'Стойкость инструмента (мин)'
+            else:
+                values_of_speed = Kl * (speed_values ** a_life) * (supply_slider ** b_life) * feed_minute_massive
+                values_of_supply = Kl * (speed_slider ** a_life) * (supply_values ** b_life) * supply_values_minute
+                y_axis_title = 'Пройденный путь (мм)'
+
 
             # Построение графиков
             fig_speed = go.Figure(data=[
@@ -174,7 +193,7 @@ def create_dash(flask_app):
                 title=f'Зависимость {y_axis_title} от скорости резания',
                 xaxis_title='Скорость резания (м/мин)',
                 yaxis_title=y_axis_title,
-                legend = dict(
+                legend=dict(
                     x=0.5,
                     y=-0.4,
                     xanchor='center',
@@ -186,7 +205,7 @@ def create_dash(flask_app):
                 title=f'Зависимость {y_axis_title} от подачи на зуб',
                 xaxis_title='Подача на зуб (мм/зуб)',
                 yaxis_title=y_axis_title,
-                legend = dict(
+                legend=dict(
                     x=0.5,
                     y=-0.4,
                     xanchor='center',
@@ -198,11 +217,14 @@ def create_dash(flask_app):
             cutting_force_value = Kc * (speed_slider ** a_force) * (supply_slider ** b_force)
             cutting_temperature_value = Kt * (speed_slider ** a_temp) * (supply_slider ** b_temp)
             tool_life_value = Kl * (speed_slider ** a_life) * (supply_slider ** b_life)
+            length_processing_value = (tool_life_value * supply_slider * teeth_count * speed_slider * 1000) / (
+                        diameter * 3.14)
 
             # Форматирование результатов
             cutting_force = f'{cutting_force_value:.2f} Н'
             cutting_temperature = f'{cutting_temperature_value:.2f} °C'
             tool_life = f'{tool_life_value:.2f} мин'
+            length_processing = f'{length_processing_value:.2f} мм'
 
         # Обновление значений скорости и подачи
         cutting_speed_value = f'{speed_slider}'
@@ -214,6 +236,7 @@ def create_dash(flask_app):
             cutting_force,
             cutting_temperature,
             tool_life,
+            length_processing,
             cutting_speed_value,
             feed_per_tooth_value
         )
