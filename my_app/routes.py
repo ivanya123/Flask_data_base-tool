@@ -180,11 +180,24 @@ def get_materials_by_type(type_id):
 
 @app.route('/calculate')
 def calculate():
+    cutting_speed_value = request.args.get('cutting_speed', '0')  # Получаем значение как строку
+    try:
+        cutting_speed = float(cutting_speed_value)  # Пробуем преобразовать в float
+    except ValueError:
+        cutting_speed = 0  # В случае ошибки устанавливаем значение по умолчанию
+        print(f"Некорректное значение cutting_speed: {cutting_speed_value}")
+
+    feed_per_tooth_value = request.args.get('feed_per_tooth', '0')
+    try:
+        feed_per_tooth = float(feed_per_tooth_value)
+    except ValueError:
+        feed_per_tooth = 0
+        print(f"Некорректное значение feed_per_tooth: {feed_per_tooth_value}")
+
     material_id = request.args.get('material_id')
     tool_id = request.args.get('tool_id')
     coating_id = request.args.get('coating_id')
-    cutting_speed = float(request.args.get('cutting_speed', 0))
-    feed_per_tooth = float(request.args.get('feed_per_tooth', 0))
+
 
     # Получаем коэффициенты из базы данных
     coefficient = Coefficients.query.filter_by(
@@ -433,10 +446,7 @@ def update_graph_data():
     material_id = data.get('material_id')
     tool_id = data.get('tool_id')
     coating_id = data.get('coating_id')
-    cutting_speed = float(data.get('cutting_speed', 0))
-    feed_per_tooth = float(data.get('feed_per_tooth', 0))
-    selected_parameter = data.get('selected_parameter')  # Получаем выбранный параметр
-    print(selected_parameter)
+
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
         tool_id=tool_id,
@@ -447,13 +457,15 @@ def update_graph_data():
         app.config['GRAPH_DATA'] = {}
     else:
         app.config['GRAPH_DATA'] = {
-            'cutting_speed': cutting_speed,
-            'feed_per_tooth': feed_per_tooth,
             'cutting_force_coefficient': coefficient.cutting_force_coefficient,
             'cutting_temperature_coefficient': coefficient.cutting_temperature_coefficient,
-            'durability_coefficient': coefficient.durability_coefficient,
-            'selected_parameter': selected_parameter  # Сохраняем текущий выбранный параметр
+            'durability_coefficient': coefficient.durability_coefficient
         }
 
     return jsonify({'status': 'success'})
 
+@app.route('/update_dash_values', methods=['GET', 'POST'])
+def update_dash_values():
+    # Получаем значения слайдеров от Dash
+    dash_values = app.config.get('DASH_SLIDER_VALUES', {})
+    return jsonify(dash_values)

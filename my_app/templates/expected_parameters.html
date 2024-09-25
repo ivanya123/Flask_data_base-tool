@@ -96,51 +96,17 @@
                 {% endfor %}
             </select>
         </div>
+        <div id="dash-container">
+            <iframe src="/dash/" width="100%" height="600px" frameborder="0"></iframe>
+        </div>
     </form>
-
-    <!-- Ползунки для скорости резания и подачи на зуб -->
-    <div class="slider-container">
-        <label for="cutting_speed">Скорость резания (V), м/мин:</label>
-        <input type="range" class="form-range" id="cutting_speed" min="10" max="200" value="75" step="1">
-        <div class="value-container">
-            Выбранная скорость резания: <span id="cutting_speed_value">75</span> м/мин
-        </div>
-    </div>
-
-    <div class="slider-container">
-        <label for="feed_per_tooth">Подача на зуб (S), мм/зуб:</label>
-        <input type="range" class="form-range" id="feed_per_tooth" min="0.001" max="0.5" value="0.025" step="0.001">
-        <div class="value-container">
-            Выбранная подача на зуб: <span id="feed_per_tooth_value">0.025</span> мм/зуб
-        </div>
-    </div>
-
+<script>
     <!-- Отображение результатов расчета -->
-    <div class="results-container">
-        <div class="result-block">
-            Сила резания: <span id="cutting_force">-</span> Н
-        </div>
-        <div class="result-block">
-            Температура резания: <span id="cutting_temperature">-</span> °C
-        </div>
-        <div class="result-block">
-            Стойкость инструмента: <span id="tool_life">-</span> мин
-        </div>
-    </div>
-    <div id="dash-container">
-        <iframe src="/dash/" width="100%" height="600px" frameborder="0"></iframe>
-    </div>
-        <input type="hidden" id="current_parameter" value="cutting_temperature">
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
     var materialTypeSelect = document.getElementById('material_type');
     var materialSelect = document.getElementById('material');
     var toolSelect = document.getElementById('tool');
     var coatingSelect = document.getElementById('coating');
-    var cuttingSpeedSlider = document.getElementById('cutting_speed');
-    var feedPerToothSlider = document.getElementById('feed_per_tooth');
-    var parameterDropdown = document.getElementById('parameter-dropdown');
-    var currentParameterInput = document.getElementById('current_parameter');
 
     // Обработчик изменения типа материала
     materialTypeSelect.addEventListener('change', function() {
@@ -148,17 +114,9 @@
     });
 
     // Обработчики изменений для всех элементов формы
-    materialSelect.addEventListener('change', updateCalculations);
-    toolSelect.addEventListener('change', updateCalculations);
-    coatingSelect.addEventListener('change', updateCalculations);
-    cuttingSpeedSlider.addEventListener('input', updateCalculations);
-    feedPerToothSlider.addEventListener('input', updateCalculations);
-
-    // Обработчик изменения параметра на графике
-    parameterDropdown.addEventListener('change', function() {
-        currentParameterInput.value = parameterDropdown.value; // Сохранение текущего выбранного параметра
-        updateGraph(); // Обновление графика при изменении выбранного параметра
-    });
+    materialSelect.addEventListener('change', updateCoefficients);
+    toolSelect.addEventListener('change', updateCoefficients);
+    coatingSelect.addEventListener('change', updateCoefficients);
 
     function updateMaterialOptions() {
         var typeId = materialTypeSelect.value;
@@ -181,65 +139,35 @@
             materialSelect.disabled = true;
         }
 
-        updateCalculations();
+        updateCoefficients(); // Обновляем коэффициенты при изменении типа материала
     }
 
-    function updateCalculations() {
+    function updateCoefficients() {
         var materialId = materialSelect.value;
         var toolId = toolSelect.value;
         var coatingId = coatingSelect.value;
-        var cuttingSpeed = cuttingSpeedSlider.value;
-        var feedPerTooth = feedPerToothSlider.value;
 
         if (materialId && toolId && coatingId) {
-            fetch(`/calculate?material_id=${materialId}&tool_id=${toolId}&coating_id=${coatingId}&cutting_speed=${cuttingSpeed}&feed_per_tooth=${feedPerTooth}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('cutting_speed_value').innerText = cuttingSpeed;
-                    document.getElementById('feed_per_tooth_value').innerText = parseFloat(feedPerTooth).toFixed(3);
-                    document.getElementById('cutting_force').innerText = data.cutting_force.toFixed(2);
-                    document.getElementById('cutting_temperature').innerText = data.cutting_temperature.toFixed(2);
-                    document.getElementById('tool_life').innerText = data.tool_life.toFixed(2);
-
-                    updateGraph();
-                });
-        } else {
-            document.getElementById('cutting_force').innerText = '-';
-            document.getElementById('cutting_temperature').innerText = '-';
-            document.getElementById('tool_life').innerText = '-';
+            fetch(`/update_graph_data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    material_id: materialId,
+                    tool_id: toolId,
+                    coating_id: coatingId
+                })
+            }).then(() => {
+                var iframe = document.querySelector('#dash-container iframe');
+                iframe.contentWindow.location.reload(); // Перезагрузка iframe для обновления графика и результатов
+            });
         }
     }
 
-    function updateGraph() {
-        var materialId = materialSelect.value;
-        var toolId = toolSelect.value;
-        var coatingId = coatingSelect.value;
-        var cuttingSpeed = cuttingSpeedSlider.value;
-        var feedPerTooth = feedPerToothSlider.value;
-        var selectedParameter = currentParameterInput.value; // Получаем текущий выбранный параметр
-
-        fetch(`/update_graph_data`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                material_id: materialId,
-                tool_id: toolId,
-                coating_id: coatingId,
-                cutting_speed: cuttingSpeed,
-                feed_per_tooth: feedPerTooth,
-                selected_parameter: selectedParameter // Отправляем текущий параметр на сервер
-            })
-        }).then(() => {
-            var iframe = document.querySelector('#dash-container iframe');
-            iframe.src = iframe.src; // Перезагрузка iframe для обновления графика
-        });
-    }
-
-    updateCalculations();
+    // Инициализируем коэффициенты при загрузке страницы
+    updateCoefficients();
 });
-
-    </script>
+</script>
 </div>
 {% endblock %}
