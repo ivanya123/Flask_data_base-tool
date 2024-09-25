@@ -173,13 +173,25 @@ def create_dash(flask_app):
             fig_speed.update_layout(
                 title=f'Зависимость {y_axis_title} от скорости резания',
                 xaxis_title='Скорость резания (м/мин)',
-                yaxis_title=y_axis_title
+                yaxis_title=y_axis_title,
+                legend = dict(
+                    x=0.5,
+                    y=-0.4,
+                    xanchor='center',
+                    yanchor='bottom'
+                )
             )
 
             fig_supply.update_layout(
                 title=f'Зависимость {y_axis_title} от подачи на зуб',
                 xaxis_title='Подача на зуб (мм/зуб)',
-                yaxis_title=y_axis_title
+                yaxis_title=y_axis_title,
+                legend = dict(
+                    x=0.5,
+                    y=-0.4,
+                    xanchor='center',
+                    yanchor='bottom'
+                )
             )
 
             # Вычисление результатов
