@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, callback, ctx
 import plotly.graph_objs as go
 import numpy as np
 
@@ -61,10 +61,16 @@ def create_dash(flask_app):
                             marks={i: str(i) for i in range(10, 201, 20)},
                             className='form-range'
                         ),
-                        html.Div('Выбранная скорость резания: ', style={'display': 'inline'}),
-                        html.Span(id='cutting_speed_value', children='75', className='result'),
-                        html.Span(' м/мин'),
-                        dcc.Graph(id='graph_speed')
+                        html.Div(children=[
+                            html.Div('Введите скорость резания(м/мин): ', style={'display': 'inline'}),
+                            dcc.Input(id='input_speed', type='number', size='5', min=0, max=200, value=75),
+                            html.Div(' м/мин', style={'display': 'inline'}),
+                            html.Div('Выбранная скорость резания: '),
+                            html.Span(id='cutting_speed_value', children='75', className='result',
+                                      style={'display': 'inline'}),
+                            html.Span(' м/мин', style={'display': 'inline'}),
+                            dcc.Graph(id='graph_speed')
+                        ])
                     ])
                 ])
             ]),
@@ -83,10 +89,23 @@ def create_dash(flask_app):
                             marks={round(i, 3): str(round(i, 3)) for i in [0.001, 0.1, 0.2, 0.3, 0.4, 0.5]},
                             className='form-range'
                         ),
-                        html.Div('Выбранная подача на зуб: ', style={'display': 'inline'}),
-                        html.Span(id='feed_per_tooth_value', children='0.025', className='result'),
-                        html.Span(' мм/зуб'),
-                        dcc.Graph(id='graph_supply')
+                        html.Div(children=[
+                            html.Div('Введите подачу на зуб(S): ', style={'display': 'inline'}),
+                            dcc.Input(id='input_supply', type='number', size='5', min=0, max=0.5, value=0.025,
+                                      step=0.001,
+                                      style={'display': 'inline'}),
+                            html.Div(' мм/зуб', style={'display': 'inline'}),
+                            html.Div(children=[
+                                html.Div('Выбранная подача на зуб: ', style={'display': 'inline'}),
+                                html.Span(id='feed_per_tooth_value', children='0.025', className='result',
+                                          style={
+                                              'display': 'inline'
+                                          }),
+                                html.Span(' мм/зуб', style={'display': 'inline'})
+                            ]),
+                            dcc.Graph(id='graph_supply')
+
+                        ])
                     ])
                 ])
             ])
@@ -101,15 +120,23 @@ def create_dash(flask_app):
          Output('tool_life', 'children'),
          Output('length_processing', 'children'),
          Output('cutting_speed_value', 'children'),
-         Output('feed_per_tooth_value', 'children')],
+         Output('feed_per_tooth_value', 'children'),
+         Output('slider_speed', 'value'),
+         Output('slider_s', 'value'),
+         Output('input_speed', 'value'),
+         Output('input_supply', 'value')
+         ],
         [Input('parameter-dropdown', 'value'),
          Input('slider_speed', 'value'),
-         Input('slider_s', 'value')]
+         Input('slider_s', 'value'),
+         Input('input_speed', 'value'),
+         Input('input_supply', 'value')
+         ]
     )
-    def update_graph_and_calculations(selected_parameter, speed_slider, supply_slider):
+    def update_graph_and_calculations(selected_parameter, speed_slider, supply_slider, input_speed, input_supply):
         # Получаем коэффициенты из `flask_app.config`
         graph_data = flask_app.config.get('GRAPH_DATA', {})
-
+        print(type(supply_slider))
         # Проверяем наличие коэффициентов
         if not graph_data:
             # Возвращаем пустые графики и дефолтные значения
@@ -135,14 +162,20 @@ def create_dash(flask_app):
             a_life = -0.2
             b_life = -0.15
 
+            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            if trigger_id == 'input_speed':
+                speed_slider = input_speed
+            elif trigger_id == 'input_supply':
+                supply_slider = input_supply
+
             # Диапазоны значений скорости и подачи
             speed_values = np.arange(10, 201, 1)
             supply_values = np.arange(0.001, 0.501, 0.001)
 
-            rotation_per_minute = speed_values * 1000 / 3.14 * diameter
+            rotation_per_minute = (speed_values * 1000) / (3.14 * diameter)
             feed_minute_massive = supply_slider * rotation_per_minute * teeth_count
 
-            rotation_stat = speed_slider * 1000 / 3.14 * diameter
+            rotation_stat = (speed_slider * 1000) / (3.14 * diameter)
             # Массив значений на которое надо умножить время для получения расстояния
             supply_values_minute = supply_values * rotation_stat * teeth_count
 
@@ -163,7 +196,6 @@ def create_dash(flask_app):
                 values_of_speed = Kl * (speed_values ** a_life) * (supply_slider ** b_life) * feed_minute_massive
                 values_of_supply = Kl * (speed_slider ** a_life) * (supply_values ** b_life) * supply_values_minute
                 y_axis_title = 'Пройденный путь (мм)'
-
 
             # Построение графиков
             fig_speed = go.Figure(data=[
@@ -218,7 +250,7 @@ def create_dash(flask_app):
             cutting_temperature_value = Kt * (speed_slider ** a_temp) * (supply_slider ** b_temp)
             tool_life_value = Kl * (speed_slider ** a_life) * (supply_slider ** b_life)
             length_processing_value = (tool_life_value * supply_slider * teeth_count * speed_slider * 1000) / (
-                        diameter * 3.14)
+                    diameter * 3.14)
 
             # Форматирование результатов
             cutting_force = f'{cutting_force_value:.2f} Н'
@@ -238,7 +270,11 @@ def create_dash(flask_app):
             tool_life,
             length_processing,
             cutting_speed_value,
-            feed_per_tooth_value
+            feed_per_tooth_value,
+            np.round(speed_slider, 2),
+            np.round(supply_slider, 3),
+            np.round(speed_slider, 2),
+            np.round(supply_slider, 3)
         )
 
     return dash_app
