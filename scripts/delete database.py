@@ -82,7 +82,7 @@ def obrabotka_csv(data):
 
 def process_csv_files(file_path):
     list_parameters = obrabotka_csv(file_path[0])
-    save_path = os.path.join('uploads', 'csv_files_new')
+    save_path = os.path.join('../uploads', 'csv_files_new')
     os.makedirs(save_path, exist_ok=True)
     new_file_path_s = os.path.join(save_path, os.path.basename(file_path[0]))
     new_file_path_t = os.path.join(save_path, os.path.basename(file_path[1]))
@@ -149,7 +149,7 @@ def graphiks(path, csv_id):
     # Добавить легенду
     plt.legend()
     plt.grid(True)
-    save_path = os.path.join('my_app/static', 'graphik')
+    save_path = os.path.join('../my_app/static', 'graphik')
     os.makedirs(save_path, exist_ok=True)
     path_file = str(csv_id) + 'strengh.png'
     plt.savefig(save_path + '/' + path_file)
@@ -183,7 +183,7 @@ def graphikt(path, csv_id):
     plt.legend()
     plt.grid(True)
 
-    save_path = os.path.join('my_app/static', 'graphik')
+    save_path = os.path.join('../my_app/static', 'graphik')
     os.makedirs(save_path, exist_ok=True)
     path_file = str(csv_id) + 'temp.png'
     plt.savefig(save_path + '/' + path_file)

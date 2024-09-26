@@ -65,10 +65,12 @@ def create_dash(flask_app):
                             html.Div('Введите скорость резания(м/мин): ', style={'display': 'inline'}),
                             dcc.Input(id='input_speed', type='number', size='5', min=0, max=200, value=75),
                             html.Div(' м/мин', style={'display': 'inline'}),
-                            html.Div('Выбранная скорость резания: '),
-                            html.Span(id='cutting_speed_value', children='75', className='result',
-                                      style={'display': 'inline'}),
-                            html.Span(' м/мин', style={'display': 'inline'}),
+                            html.Div(children=[
+                                html.Div('Выбранная скорость резания: ', style={'display': 'inline'}),
+                                html.Span(id='cutting_speed_value', children='75', className='result',
+                                          style={'display': 'inline'}),
+                                html.Span(' м/мин', style={'display': 'inline'})
+                            ]),
                             dcc.Graph(id='graph_speed')
                         ])
                     ])
