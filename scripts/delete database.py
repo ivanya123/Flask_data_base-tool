@@ -2,7 +2,7 @@ import os
 from typing import Any, List, Tuple
 
 from my_app import db,app
-from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating
+from my_app.models import Csv_Files, Experiments, RecomededSpeed, Materials,Toolsdate,Coating
 import pandas as pd
 import matplotlib.pyplot as plt
 import shutil
@@ -103,13 +103,13 @@ def process_csv_files(file_path):
     db.session.commit()
     id_csv_filter = Csv_Files.query.filter_by(filename_strengh=os.path.basename(file_path[0])).first()
     list_parameters.append(id_csv)
-    material = Material.query.filter_by(Name = list_parameters[0]).first()
+    material = Materials.query.filter_by(Name = list_parameters[0]).first()
     tool = Toolsdate.query.filter_by(Name = list_parameters[1]).first()
     coating = Coating.query.filter_by(Name = list_parameters[2]).first()
 
-    experiment = Experiments(Material=material.Name,
-                             Tool=tool.Name,
-                             Coating=coating.Name,
+    experiment = Experiments(Material=material.name,
+                             Tool=tool.name,
+                             Coating=coating.name,
                              SpindleSpeed=list_parameters[3],
                              FeedTable=list_parameters[4],
                              DepthCut=list_parameters[5],

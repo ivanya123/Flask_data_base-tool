@@ -28,7 +28,7 @@ def upgrade():
                existing_nullable=True)
 
     with op.batch_alter_table('material', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('Gost', sa.String(length=64), nullable=True))
+        batch_op.add_column(sa.Column('gost', sa.String(length=64), nullable=True))
 
     with op.batch_alter_table('tool_geometry', schema=None) as batch_op:
         batch_op.add_column(sa.Column('FrontAngle', sa.Float(), nullable=True))
@@ -54,7 +54,7 @@ def downgrade():
         batch_op.drop_column('FrontAngle')
 
     with op.batch_alter_table('material', schema=None) as batch_op:
-        batch_op.drop_column('Gost')
+        batch_op.drop_column('gost')
 
     with op.batch_alter_table('coating', schema=None) as batch_op:
         batch_op.alter_column('MaxThickness',

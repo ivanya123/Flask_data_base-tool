@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from my_app.forms import MaterialForm, CoatingForm, ToolForm
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients, \
+from my_app.models import Materials, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients, \
     MaterialType
 
 
@@ -72,7 +72,7 @@ def add():
                     render_template('add.html', material_form=material_form, coating_form=coating_form,
                                     tool_form=tool_form)
 
-                new_material = Material(
+                new_material = Materials(
                     Name=material_form.name.data,
                     PropPhysics=material_form.prop_physics.data,
                     Structure=material_form.structure.data,
@@ -126,7 +126,7 @@ def materials_table():
     search_query = request.args.get('search_query', '')
 
     # Базовый запрос
-    materials_query = Material.query
+    materials_query = Materials.query
 
     # Фильтрация по типу материала, если выбран
     if selected_type_id and selected_type_id != 'all':
@@ -134,10 +134,10 @@ def materials_table():
 
     # Поиск по названию материала
     if search_query:
-        materials_query = materials_query.filter(Material.Name.ilike(f'%{search_query}%'))
+        materials_query = materials_query.filter(Materials.name.ilike(f'%{search_query}%'))
 
     # Получаем отсортированный список материалов
-    materials = materials_query.order_by(Material.Name).all()
+    materials = materials_query.order_by(Materials.name).all()
 
     return render_template('materials.html', materials=materials, material_types=material_types,
                            selected_type_id=selected_type_id, search_query=search_query)
@@ -148,23 +148,23 @@ def search_materials():
     search_query = request.args.get('search_query', '')
     type_id = request.args.get('type_id', 'all')
 
-    materials = Material.query
+    materials = Materials.query
     # Ищем материалы, соответствующие запросу
     if type_id != 'all':
         materials = materials.filter_by(type_id=type_id)
     if search_query:
-        filtered_materials = [material for material in materials.all() if search_query.lower() in material.Name.lower()]
+        filtered_materials = [material for material in materials.all() if search_query.lower() in material.name.lower()]
     else:
         filtered_materials = materials.all()
 
     # Преобразуем результат в список словарей
     materials_list = [{
         'id': material.id,
-        'name': material.Name,
-        'prop_physics': material.PropPhysics,
-        'structure': material.Structure,
-        'properties': material.Properties,
-        'gost': material.Gost
+        'name': material.name,
+        'prop_physics': material.prop_physics,
+        'structure': material.structure,
+        'properties': material.properties,
+        'gost': material.gost
     } for material in filtered_materials]
 
     return jsonify(materials_list)
@@ -172,9 +172,9 @@ def search_materials():
 @app.route('/materials/by_type/<int:type_id>')
 def get_materials_by_type(type_id):
     # Получаем материалы, соответствующие выбранному типу
-    materials = Material.query.filter_by(type_id=type_id).all()
+    materials = Materials.query.filter_by(type_id=type_id).all()
     # Преобразуем материалы в список словарей
-    materials_list = [{'id': material.id, 'name': material.Name} for material in materials]
+    materials_list = [{'id': material.id, 'name': material.name} for material in materials]
     return jsonify(materials_list)
 
 
@@ -242,7 +242,7 @@ def calculate():
 
 @app.route('/materials/<int:id>/delete')
 def delete_materials(id):
-    delete_str = Material.query.get_or_404(id)
+    delete_str = Materials.query.get_or_404(id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
@@ -253,13 +253,13 @@ def delete_materials(id):
 
 @app.route('/materials/<int:id>/update', methods=['GET', 'POST'])
 def materials_update(id):
-    materials = Material.query.get_or_404(id)
+    materials = Materials.query.get_or_404(id)
     if request.method == 'POST':
-        materials.name = request.form['Name']
-        materials.PropPhysics = request.form['NameP']
-        materials.Structure = request.form['NameX']
-        materials.Properties = request.form['NamePr']
-        materials.Gost = request.form['NameGost']
+        materials.name = request.form['name']
+        materials.prop_physics = request.form['NameP']
+        materials.structure = request.form['NameX']
+        materials.properties = request.form['NamePr']
+        materials.gost = request.form['NameGost']
         try:
             db.session.commit()
             return redirect('/materials')
@@ -271,7 +271,7 @@ def materials_update(id):
 
 @app.route("/material/<int:id>/info")
 def mat_info(id):
-    material = Material.query.get_or_404(id)
+    material = Materials.query.get_or_404(id)
     return render_template('mat_info.html', material=material)
 
 
@@ -296,7 +296,7 @@ def delete_coating(id):
 def coating_update(id):
     coatings = Coating.query.get(id)
     if request.method == 'POST':
-        coatings.Name = request.form['Name1']
+        coatings.name = request.form['Name1']
         coatings.MaterialCoating = request.form['Name2']
         coatings.TypeApplication = request.form['Name3']
         coatings.MaxThickness = request.form['Name4']
@@ -341,7 +341,7 @@ def delete_tool(id):
 def tool_update(id):
     tool = Toolsdate.query.get(id)
     if request.method == 'POST':
-        tool.Name = request.form['Name5']
+        tool.name = request.form['Name5']
         tool.MaterialTool = request.form['Name6']
         tool.NumberTeeth = request.form['Name8']
         tool.Diameter = request.form['Name9']
@@ -417,7 +417,7 @@ def adhesive():
 
 @app.route("/expected_parameters", methods=['GET', 'POST'])
 def expected_parameters():
-    materials = Material.query.all()
+    materials = Materials.query.all()
     tools = Toolsdate.query.all()
     coatings = Coating.query.all()
     material_types = MaterialType.query.all()

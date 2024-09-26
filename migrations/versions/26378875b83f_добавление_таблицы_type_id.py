@@ -33,11 +33,11 @@ def downgrade():
 
     op.create_table('_alembic_tmp_material',
     sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('Name', sa.VARCHAR(length=64), nullable=True),
-    sa.Column('PropPhysics', sa.VARCHAR(length=64), nullable=True),
-    sa.Column('Structure', sa.TEXT(), nullable=True),
-    sa.Column('Properties', sa.VARCHAR(length=120), nullable=True),
-    sa.Column('Gost', sa.VARCHAR(length=64), nullable=True),
+    sa.Column('name', sa.VARCHAR(length=64), nullable=True),
+    sa.Column('prop_physics', sa.VARCHAR(length=64), nullable=True),
+    sa.Column('structure', sa.TEXT(), nullable=True),
+    sa.Column('properties', sa.VARCHAR(length=120), nullable=True),
+    sa.Column('gost', sa.VARCHAR(length=64), nullable=True),
     sa.Column('type_id', sa.INTEGER(), nullable=False),
     sa.ForeignKeyConstraint(['type_id'], ['material_type.id'], name='fk_material_type'),
     sa.PrimaryKeyConstraint('id')

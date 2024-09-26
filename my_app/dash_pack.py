@@ -138,7 +138,7 @@ def create_dash(flask_app):
     def update_graph_and_calculations(selected_parameter, speed_slider, supply_slider, input_speed, input_supply):
         # Получаем коэффициенты из `flask_app.config`
         graph_data = flask_app.config.get('GRAPH_DATA', {})
-        print(type(supply_slider))
+
         # Проверяем наличие коэффициентов
         if not graph_data:
             # Возвращаем пустые графики и дефолтные значения
@@ -153,6 +153,7 @@ def create_dash(flask_app):
             Kc = graph_data.get('cutting_force_coefficient', 1)
             Kt = graph_data.get('cutting_temperature_coefficient', 1)
             Kl = graph_data.get('durability_coefficient', 1)
+            # Извлекаем данные для расчетов подачи в минуту и продйденного пути.
             diameter = graph_data.get('diameter', 1)
             teeth_count = graph_data.get('teeth_count', 1)
 
@@ -164,6 +165,8 @@ def create_dash(flask_app):
             a_life = -0.2
             b_life = -0.15
 
+            # Приравниваем знавения слайдера к значению вводимого значения,
+            # если функция вызывалась изменением input объукта.
             trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
             if trigger_id == 'input_speed':
                 speed_slider = input_speed

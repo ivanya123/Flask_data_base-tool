@@ -6,7 +6,7 @@
 </div>
 
 <form method="POST" action="/recommended_speed" style="margin: 20px auto; max-width: 400px; padding: 20px; border: 1px solid #ccc; border-radius: 10px;">
-    <label for="material" style="font-size: 16px; color: #333; margin-bottom: 10px; display: block;">Material:</label>
+    <label for="material" style="font-size: 16px; color: #333; margin-bottom: 10px; display: block;">Materials:</label>
     <select name="material" id="material" style="font-size: 14px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; margin-bottom: 20px;">
         {% for material in unique_materials %}
         <option value="{{ material[0] }}">{{ material[0] }}</option>

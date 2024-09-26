@@ -24,8 +24,8 @@ def upgrade():
     sa.Column('temperature', sa.Integer(), nullable=False),
     sa.Column('bond_strength_adhesive', sa.Float(), nullable=False),
     sa.Column('normal_shear_strength', sa.Float(), nullable=False),
-    sa.ForeignKeyConstraint(['coating'], ['coating.Name'], ),
-    sa.ForeignKeyConstraint(['material'], ['material.Name'], ),
+    sa.ForeignKeyConstraint(['coating'], ['coating.name'], ),
+    sa.ForeignKeyConstraint(['material'], ['material.name'], ),
     sa.PrimaryKeyConstraint('material', 'coating', 'temperature', name='adhesive_pk')
     )
     # ### end Alembic commands ###
