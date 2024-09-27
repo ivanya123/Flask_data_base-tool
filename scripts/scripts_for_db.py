@@ -2,7 +2,7 @@ import os
 from typing import Any
 import json
 from my_app import db, app
-from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material, Toolsdate, Coating, Coefficients, \
+from my_app.models import CsvFiles, Experiments, RecommendationParameters, Materials, Tools, Coating, Coefficients, \
     MaterialType
 # import pandas as pd
 # import matplotlib.pyplot as plt
@@ -48,9 +48,9 @@ app.app_context().push()
 #
 #
 # for key, values in final_dict.items():
-#     material_id = Material.query.filter_by(Name=key.split(', ')[0].strip()).first().id
-#     coating_id = Coating.query.filter_by(Name=key.split(', ')[1].strip()).first().id
-#     tooldate_id = Toolsdate.query.filter_by(Name=key.split(', ')[2].strip()).first().id
+#     material_id = Materials.query.filter_by(name=key.split(', ')[0].strip()).first().id
+#     coating_id = coating.query.filter_by(name=key.split(', ')[1].strip()).first().id
+#     tooldate_id = Tools.query.filter_by(name=key.split(', ')[2].strip()).first().id
 #     force_coefficient = values['Силы']
 #     temperature_coefficient = values['Температура']
 #     durability_coefficient = random.randint(60, 100)
@@ -88,10 +88,10 @@ from sqlalchemy import text
 # inspector = inspect(db.engine)
 # print(inspector.get_table_names())
 
-# materials = Material.query.all()
+# materials = Materials.query.all()
 # try:
 #     for material in materials:
-#         if 'ВТ' in material.Name:
+#         if 'ВТ' in material.name:
 #             material.type_id = 1
 #         else:
 #             material.type_id = 2
@@ -101,6 +101,6 @@ from sqlalchemy import text
 # finally:
 #     db.session.close()
 
-materials = Material.query.all()
+materials = Materials.query.all()
 for material in materials:
-    print(material.Name,'-', material.type_id)
+    print(material.name, '-', material.type_id)

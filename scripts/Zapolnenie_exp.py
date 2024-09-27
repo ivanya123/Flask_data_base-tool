@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from my_app import db, app
-from my_app.models import Material, Coating, Toolsdate, Experiments, Csv_Files, RecomededSpeed
+from my_app.models import Materials, Coating, Tools, Experiments, CsvFiles, RecommendationParameters
 import os
 import pandas as pd
 import shutil
@@ -18,10 +18,10 @@ def corteg_path(path):
     files_s = []
     files_t = []
     for i in list_path:
-        if ("Силы" in i) and ('КОЭФФИЦИЕНТЫ' not in i) and ('ЛИНИИ' not in i) and ('Титан.csv' not in i):
+        if ("Силы" in i) and ('КОЭФФИЦИЕНТЫ' not in i) and ('ЛИНИИ' not in i) and ('Титан.csv_files' not in i):
             files_s.append(f'{path}{i}')
     for i in list_path:
-        if ("Температура" in i) and ('КОЭФФИЦИЕНТЫ' not in i) and ('ЛИНИИ' not in i) and ('Титан.csv' not in i):
+        if ("Температура" in i) and ('КОЭФФИЦИЕНТЫ' not in i) and ('ЛИНИИ' not in i) and ('Титан.csv_files' not in i):
             files_t.append(f'{path}{i}')
     corteg_files = []
     for i in range(len(files_s)):
@@ -51,7 +51,7 @@ def obrabotka_csv(data):
   list_parameters = []
   material = df.columns[1].split(',')[0].replace('v','В').replace('t','Т').replace('u','У')
   coating = coating_1(df.columns[1].split(',')[1])
-  spindelSpeed = float(df.columns[1].split(',')[3].replace('.csv',''))
+  spindelSpeed = float(df.columns[1].split(',')[3].replace('.csv_files',''))
   TableFeed = float(df.columns[1].split(',')[2])
   LengthPath = df['L, мм'].iloc[-1]
   Durability = LengthPath/TableFeed
@@ -77,20 +77,20 @@ def process_csv_files(file_path):
     shutil.copyfile(file_path[0], new_file_path_s)
     shutil.copyfile(file_path[1], new_file_path_t)
 
-    csv_file = Csv_Files(filename_strengh = os.path.basename(file_path[0]),  path = new_file_path_s, filename_temrature=new_file_path_t)
+    csv_file = CsvFiles(filename_strengh = os.path.basename(file_path[0]), path = new_file_path_s, filename_temrature=new_file_path_t)
     db.session.add(csv_file)
     db.session.commit()
-    id_csv_filter = Csv_Files.query.filter_by(filename_strengh = os.path.basename(file_path[0])).first()
+    id_csv_filter = CsvFiles.query.filter_by(filename_strengh = os.path.basename(file_path[0])).first()
     id_csv = id_csv_filter.id
     list_parameters.append(id_csv)
-    material = Material.query.filter_by(Name = list_parameters[0]).first()
-    print(material.Name)
-    tool = Toolsdate.query.filter_by(Name = list_parameters[1]).first()
+    material = Materials.query.filter_by(Name = list_parameters[0]).first()
+    print(material.name)
+    tool = Tools.query.filter_by(Name = list_parameters[1]).first()
     coating = Coating.query.filter_by(Name = list_parameters[2]).first()
 
-    experiment = Experiments(Material=material.Name,
-                             Tool=tool.Name,
-                             Coating=coating.Name,
+    experiment = Experiments(Material=material.name,
+                             Tool=tool.name,
+                             Coating=coating.name,
                              SpindleSpeed=list_parameters[3],
                              FeedTable=list_parameters[4],
                              DepthCut=list_parameters[5],
@@ -135,13 +135,13 @@ def graphiks(path):
     save_path = os.path.join('../my_app/static', 'graphik')
     os.makedirs(save_path, exist_ok=True)
     print(os.path.basename(path))
-    csv_files = Csv_Files.query.filter_by(filename_strengh=os.path.basename(path)).first()
+    csv_files = CsvFiles.query.filter_by(filename_strengh=os.path.basename(path)).first()
     id_files = csv_files.id
     path_file = str(id_files) + 'strengh.png'
     plt.savefig(save_path + '/' + path_file)
     plt.close()
     path_file = save_path.replace('\\', '/')+ '/'+ path_file
-    csv_files.path_graphik_s = path_file.replace('my_app/static/','')
+    csv_files.path_graphic_s = path_file.replace('my_app/static/', '')
     return path_file
 
 
@@ -174,13 +174,13 @@ def graphikt(path):
     save_path = os.path.join('../my_app/static', 'graphik')
     os.makedirs(save_path, exist_ok=True)
     final_path = str(save_path + '/' + os.path.basename(path))
-    csv_files = Csv_Files.query.filter_by(filename_temrature=os.path.basename(final_path)).first()
+    csv_files = CsvFiles.query.filter_by(filename_temrature=os.path.basename(final_path)).first()
     id_files = csv_files.id
     path_file = str(id_files) + 'temp.png'
     plt.savefig(save_path + '/' + path_file)
     plt.close()
     path_file = save_path.replace('\\', '/')+ '/' + path_file
-    csv_files.path_graphik_t = path_file.replace('my_app/static/', '')
+    csv_files.path_graphic_t = path_file.replace('my_app/static/', '')
     return path_file
 
 
@@ -208,7 +208,7 @@ print(r)
 #    db.session.commit()
 #
 #
-#csv_all = Csv_Files.query.all()
+#csv_all = CsvFiles.query.all()
 #
 #for i in csv_all:
 #    print(f'{i.path_graphik_t}--{i.path_graphik_s}')

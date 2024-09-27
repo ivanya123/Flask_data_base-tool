@@ -1,190 +1,247 @@
 import sqlalchemy as sa
-import sqlalchemy.orm as so
 from my_app import db
 import math
 
 
-class Material(db.Model):
+class Materials(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    Name = db.Column(sa.String(64), index=True, unique=True)
-    PropPhysics = db.Column(sa.String(64))
-    Structure = db.Column(sa.Text)
-    Properties = db.Column(sa.String(120))
-    Gost = db.Column(sa.String(64))
+    name = db.Column(sa.String(64), index=True, unique=True)
+    prop_physics = db.Column(sa.String(64))
+    structure = db.Column(sa.Text)
+    properties = db.Column(sa.String(120))
+    gost = db.Column(sa.String(64))
     type_id = db.Column(db.Integer, db.ForeignKey('material_type.id'), nullable=False)
 
-    experiment = so.relationship('Experiments', back_populates='mat_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='mat_info')
-    adhesive = so.relationship('Adhesive', back_populates='mat_info')
-    type = db.relationship('MaterialType', back_populates='materials')
+    experiments = db.relationship('Experiments', back_populates='material')
+    recommendations = db.relationship('RecommendationParameters', back_populates='material')
+    adhesives = db.relationship('Adhesive', back_populates='material')
+    material_type = db.relationship('MaterialType', back_populates='materials')
 
     def __repr__(self):
-        return '<Material {}>'.format(self.id)
+        return '<Materials {}>'.format(self.id)
 
 
-class ToolGeometry(db.Model):
+class Tools(db.Model):
+    __tablename__ = 'tools'
+
     id = db.Column(db.Integer, primary_key=True)
-    tool_id = db.Column(db.Integer, db.ForeignKey('toolsdate.id'))
-    FrontAngle = db.Column(sa.Float)
-    SpiralAngle = db.Column(sa.Float)
-    FRearAngle = db.Column(sa.Float)
-    SRearAngle = db.Column(sa.Float)
-    MainRearAngle = db.Column(sa.Float)
-    AngularPitch = db.Column(sa.String(32))
+    name = db.Column(sa.String(64), index=True, unique=True)
+    name_easy = db.Column(sa.String(64), default='')
+    tool_type = db.Column(sa.String(64))  # 'milling', 'turning', 'drill',
+    material_tool = db.Column(sa.String(64))
+    is_indexable = db.Column(sa.Boolean, default=False)
 
-    tool = db.relationship('Toolsdate', back_populates='geometry')
+    milling_geometry = db.relationship('MillingGeometry', back_populates='tool', uselist=False)
+    turning_geometry = db.relationship('TurningGeometry', back_populates='tool', uselist=False)
+    drill_geometry = db.relationship('DrillGeometry', back_populates='tool', uselist=False)
+    inserts = db.relationship('Insert', back_populates='tool')
+
+    experiments = db.relationship('Experiments', back_populates='tool')
+    recommendations = db.relationship('RecommendationParameters', back_populates='tool')
+
+    def __repr__(self):
+        return f'<Tool {self.name}>'
 
 
-class Toolsdate(db.Model):
+class MillingGeometry(db.Model):
+    __tablename__ = 'milling_geometry'
+
     id = db.Column(db.Integer, primary_key=True)
-    Name = db.Column(sa.String(64), index=True, unique=True)
-    MaterialTool = db.Column(sa.String(64))
-    NumberTeeth = db.Column(db.Integer, nullable=False)
-    Diameter = db.Column(db.Float, nullable=False)
-    geometry = db.relationship('ToolGeometry', back_populates='tool')
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), unique=True, nullable=False)
 
-    experiment = so.relationship('Experiments', back_populates='tools_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='tools_info')
+    diameter = db.Column(sa.Float)
+    number_teeth = db.Column(sa.Integer)
+    front_angle = db.Column(sa.Float)
+    spiral_angle = db.Column(sa.Float)
+    f_rear_angle = db.Column(sa.Float)
+    s_rear_angle = db.Column(sa.Float)
+    main_rear_angle = db.Column(sa.Float)
+    angular_pitch = db.Column(sa.String(32))
+
+    tool = db.relationship('Tools', back_populates='milling_geometry')
+
+
+class TurningGeometry(db.Model):
+    __tablename__ = 'turning_geometry'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), unique=True, nullable=False)
+
+    turning_type = db.Column(sa.String(64))
+    front_angle = db.Column(sa.Float)
+    main_rear_angle = db.Column(sa.Float)
+    sharpening_angle = db.Column(sa.Float)
+    cutting_angle = db.Column(sa.Float)
+    aux_rear_angle = db.Column(sa.Float)
+
+    tool = db.relationship('Tools', back_populates='turning_geometry')
+
+
+class DrillGeometry(db.Model):
+    __tablename__ = 'drill_geometry'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), unique=True, nullable=False)
+
+    drill_type = db.Column(sa.String(64))
+    diameter = db.Column(sa.Float)
+
+    top_angle = db.Column(sa.Float)
+    screw_angle = db.Column(sa.Float)
+    front_angle = db.Column(sa.Float)
+    rear_angle = db.Column(sa.Float)
+    transverse_edge_angle = db.Column(sa.Float)
+
+    tool = db.relationship('Tools', back_populates='drill_geometry')
+
+
+class Insert(db.Model):
+    __tablename__ = 'inserts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'))
+    material = db.Column(sa.String(64))
+
+    tool = db.relationship('Tools', back_populates='inserts')
+
+    def __repr__(self):
+        return f'<Insert {self.id} for Tool {self.tool.name}>'
 
 
 class Coating(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    Name = db.Column(sa.String(64), index=True, unique=True)
-    MaterialCoating = db.Column(sa.String(64))
-    ColorCoating = db.Column(sa.String(32))
-    TypeApplication = db.Column(sa.String(64))
-    MaxThickness = db.Column(sa.String(32))
-    NanoHardness = db.Column(sa.String(32))
-    TemratureResistance = db.Column(sa.Float)
-    KoefficientFriction = db.Column(sa.Float)
+    name = db.Column(sa.String(64), index=True, unique=True)
+    material_coating = db.Column(sa.String(64))
+    color_coating = db.Column(sa.String(32))
+    type_application = db.Column(sa.String(64))
+    max_thickness = db.Column(sa.String(32))
+    nano_hardness = db.Column(sa.String(32))
+    temperature_resistance = db.Column(sa.Float)
+    coefficient_friction = db.Column(sa.Float)
 
-    experiment = so.relationship('Experiments', back_populates='coat_info')
-    recomend = so.relationship('RecomededSpeed', back_populates='coat_info')
-    adhesive = so.relationship('Adhesive', back_populates='coat_info')
+    experiments = db.relationship('Experiments', back_populates='coating')
+    recommendations = db.relationship('RecommendationParameters', back_populates='coating')
+    adhesives = db.relationship('Adhesive', back_populates='coating')
 
     def __repr__(self):
-        return '<Coating {}>'.format(self.id)
+        return '<coating {}>'.format(self.id)
 
 
-class Csv_Files(db.Model):
+class CsvFiles(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    filename_strengh = db.Column(sa.String(128), nullable=False, unique=True)
-    filename_temrature = db.Column(sa.String(128), nullable=False, unique=True)
+    filename_strength = db.Column(sa.String(128), nullable=False, unique=True)
+    filename_temperature = db.Column(sa.String(128), nullable=False, unique=True)
     path = db.Column(sa.String(256), nullable=False, unique=True)
-    path_graphik_s = db.Column(sa.String(256))
-    path_graphik_t = db.Column(sa.String(256))
+    path_graphic_s = db.Column(sa.String(256))
+    path_graphic_t = db.Column(sa.String(256))
 
-    experiment = so.relationship('Experiments', back_populates='csv_f')
+    experiment = db.relationship('Experiments', back_populates='csv_file', uselist=False)
 
 
 class Experiments(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    Material = db.Column(sa.String(64), db.ForeignKey(Material.Name))
-    Tool = db.Column(sa.String(64), db.ForeignKey(Toolsdate.Name))
-    Coating = db.Column(sa.String(64), db.ForeignKey(Coating.Name))
-    SpindleSpeed = db.Column(db.Float)
-    FeedTable = db.Column(db.Float)
-    DepthCut = db.Column(db.Float)
-    WidthCut = db.Column(db.Float)
-    LengthPath = db.Column(db.Float)
-    Durability = db.Column(db.Float)
-    csv_id = db.Column(db.Integer, db.ForeignKey(Csv_Files.id))
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'))
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'))
+    coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'))
+    spindle_speed = db.Column(db.Float)
+    feed_table = db.Column(db.Float)
+    depth_cut = db.Column(db.Float)
+    width_cut = db.Column(db.Float)
+    length_path = db.Column(db.Float)
+    durability = db.Column(db.Float)
+    csv_id = db.Column(db.Integer, db.ForeignKey(CsvFiles.id))
 
-    tools_info = so.relationship('Toolsdate', foreign_keys=[Tool], back_populates='experiment')
-    coat_info = so.relationship('Coating', foreign_keys=[Coating], back_populates='experiment')
-    mat_info = so.relationship('Material', foreign_keys=[Material], back_populates='experiment')
-    csv_f = so.relationship('Csv_Files', foreign_keys=[csv_id], back_populates='experiment')
+    tool = db.relationship('Tools', foreign_keys=[tool_id], back_populates='experiments')
+    coating = db.relationship('Coating', foreign_keys=[coating_id], back_populates='experiments')
+    material = db.relationship('Materials', foreign_keys=[material_id], back_populates='experiments')
+    csv_file = db.relationship('CsvFiles', foreign_keys=[csv_id], back_populates='experiment', uselist=False)
 
     @property
     def cutter_speed(self):
-        if self.tools_info:
-            d = self.tools_info.Diameter
-            return math.pi * d * self.SpindleSpeed / 1000
+        if self.tool:
+            d = self.tool.diameter
+            return math.pi * d * self.spindle_speed / 1000
         else:
             return None
 
     @property
     def feed_of_teeth(self):
-        if self.tools_info:
-            z = self.tools_info.NumberTeeth
-            return self.FeedTable / (z * self.SpindleSpeed)
+        if self.tool:
+            z = self.tool.number_teeth
+            return self.feed_table / (z * self.spindle_speed)
 
     def __repr__(self):
         return '<Experiments {}>'.format(self.id)
 
 
-class RecomededSpeed(db.Model):
-    Material = db.Column(sa.String(64), db.ForeignKey(Material.Name), nullable=False)
-    Tool = db.Column(sa.String(64), db.ForeignKey(Toolsdate.Name), nullable=False)
-    Coating = db.Column(sa.String(64), db.ForeignKey(Coating.Name), nullable=False)
-    SpindleSpeed = db.Column(db.Integer)
-    FeedTable = db.Column(db.Float)
-    Roughness = db.Column(db.Float)
-    Hardening = db.Column(db.Float)
-    Durability = db.Column(db.Float)
-    Microhardness = db.Column(db.Float)
+class RecommendationParameters(db.Model):
+    __tablename__ = 'recommendation_parameters'
 
-    tools_info = so.relationship('Toolsdate', foreign_keys=[Tool], back_populates='recomend')
-    coat_info = so.relationship('Coating', foreign_keys=[Coating], back_populates='recomend')
-    mat_info = so.relationship('Material', foreign_keys=[Material], back_populates='recomend')
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), primary_key=True, nullable=False)
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), primary_key=True, nullable=False)
+    coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'), primary_key=True, nullable=False)
+    spindle_speed = db.Column(db.Integer)
+    feed_table = db.Column(db.Float)
+    roughness = db.Column(db.Float)
+    hardening = db.Column(db.Float)
+    durability = db.Column(db.Float)
+    micro_hardness = db.Column(db.Float)
 
-    __table_args__ = (
-        sa.PrimaryKeyConstraint('Material', 'Tool', 'Coating', name='recomended_speed_pk'),
-    )
+    tool = db.relationship('Tools', foreign_keys=[tool_id], back_populates='recommendations')
+    coating = db.relationship('Coating', foreign_keys=[coating_id], back_populates='recommendations')
+    material = db.relationship('Materials', foreign_keys=[material_id], back_populates='recommendations')
 
     @property
     def cutter_speed(self):
-        if self.tools_info:
-            d = self.tools_info.Diameter
-            return math.pi * d * self.SpindleSpeed / 1000
+        if self.tool:
+            d = self.tool.diameter
+            return math.pi * d * self.spindle_speed / 1000
         else:
             return None
 
     @property
     def feed_of_teeth(self):
-        if self.tools_info:
-            z = self.tools_info.NumberTeeth
-            return self.FeedTable / (z * self.SpindleSpeed)
+        if self.tool:
+            z = self.tool.number_teeth
+            return self.feed_table / (z * self.spindle_speed)
 
 
 class Adhesive(db.Model):
-    material = db.Column(sa.String(64), db.ForeignKey(Material.Name), nullable=False)
-    coating = db.Column(sa.String(64), db.ForeignKey(Coating.Name), nullable=False)
+    __tablename__ = 'adhesive'
+
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), primary_key=True, nullable=False)
+    coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'), primary_key=True, nullable=False)
     temperature = db.Column(sa.Integer, nullable=False)
     bond_strength_adhesive = db.Column(sa.Float, nullable=False)
     normal_shear_strength = db.Column(sa.Float, nullable=False)
 
-    mat_info = so.relationship('Material', foreign_keys=[material], back_populates='adhesive')
-    coat_info = so.relationship('Coating', foreign_keys=[coating], back_populates='adhesive')
+    material = db.relationship('Materials', foreign_keys=[material_id], back_populates='adhesives')
+    coating = db.relationship('Coating', foreign_keys=[coating_id], back_populates='adhesives')
 
     @property
-    def koefficient_shear(self):
+    def coefficient_shear(self):
         return self.bond_strength_adhesive / self.normal_shear_strength
-
-    __table_args__ = (
-        sa.PrimaryKeyConstraint('material', 'coating', 'temperature', name='adhesive_pk'),
-    )
 
 
 class Coefficients(db.Model):
     __tablename__ = 'coefficients'
 
-    material_id = db.Column(db.Integer, db.ForeignKey('material.id'), primary_key=True, nullable=False)
+    material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), primary_key=True, nullable=False)
     coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'), primary_key=True, nullable=False)
-    tool_id = db.Column(db.Integer, db.ForeignKey('toolsdate.id'), primary_key=True, nullable=False)
+    tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), primary_key=True, nullable=False)
 
     cutting_force_coefficient = db.Column(db.Float, nullable=False)
     cutting_temperature_coefficient = db.Column(db.Float, nullable=False)
     durability_coefficient = db.Column(db.Float, nullable=False)
 
-    material = db.relationship('Material', backref=db.backref('coefficients', lazy='dynamic'))
-    tool = db.relationship('Toolsdate', backref=db.backref('coefficients', lazy='dynamic'))
+    material = db.relationship('Materials', backref=db.backref('coefficients', lazy='dynamic'))
+    tool = db.relationship('Tools', backref=db.backref('coefficients', lazy='dynamic'))
     coating = db.relationship('Coating', backref=db.backref('coefficients', lazy='dynamic'))
 
     def __repr__(self):
-        return (f'{self.material.Name}-'
-                f'{self.tool.Name}-'
-                f'{self.coating.Name}-'
+        return (f'{self.material.name}-'
+                f'{self.tool.name}-'
+                f'{self.coating.name}-'
                 f'{self.cutting_force_coefficient};'
                 f'{self.cutting_temperature_coefficient};'
                 f'{self.durability_coefficient}')
@@ -193,7 +250,7 @@ class Coefficients(db.Model):
 class MaterialType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(sa.String(64), unique=True, nullable=False)  # Название типа материала
-    materials = db.relationship('Material', back_populates='type')  # Связь с материалами
+    materials = db.relationship('Materials', back_populates='material_type')  # Связь с материалами
 
     def __repr__(self):
         return f'<MaterialType {self.name}>'

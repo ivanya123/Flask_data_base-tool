@@ -5,15 +5,15 @@ from sqlalchemy import func
 
 from my_app.forms import MaterialForm, CoatingForm, ToolForm
 from my_app import app, db
-from my_app.models import Material, Toolsdate, Coating, Experiments, RecomededSpeed, Adhesive, Coefficients, \
+from my_app.models import Materials, Tools, Coating, Experiments, RecommendationParameters, Adhesive, Coefficients, \
     MaterialType
 
 
 @app.route('/')
 def select_parameters():
-    unique_materials = RecomededSpeed.query.with_entities(RecomededSpeed.Material).distinct().all()
-    unique_tools = RecomededSpeed.query.with_entities(RecomededSpeed.Tool).distinct().all()
-    unique_coatings = RecomededSpeed.query.with_entities(RecomededSpeed.Coating).distinct().all()
+    unique_materials = RecommendationParameters.query.with_entities(RecommendationParameters.material).distinct().all()
+    unique_tools = RecommendationParameters.query.with_entities(RecommendationParameters.tool).distinct().all()
+    unique_coatings = RecommendationParameters.query.with_entities(RecommendationParameters.coating).distinct().all()
 
     return render_template('home.html', unique_materials=unique_materials, unique_tools=unique_tools,
                            unique_coatings=unique_coatings)
@@ -26,21 +26,21 @@ def recomended_speeds():
         tool = request.form['tool']
         coating = request.form['coating']
         filters = {
-            RecomededSpeed.Material: material,
-            RecomededSpeed.Tool: tool,
+            RecommendationParameters.material: material,
+            RecommendationParameters.tool: tool,
         }
         if coating != 'None':
-            filters[RecomededSpeed.Coating] = coating
+            filters[RecommendationParameters.coating] = coating
 
-        recomended_speed = RecomededSpeed.query.filter_by(**filters).options(
-            load_only(RecomededSpeed.Material, RecomededSpeed.Tool, RecomededSpeed.Coating,
-                      RecomededSpeed.SpindleSpeed, RecomededSpeed.FeedTable, RecomededSpeed.Durability)
-        ).order_by(sa.desc(RecomededSpeed.Durability)).all()
+        recomended_speed = RecommendationParameters.query.filter_by(**filters).options(
+            load_only(RecommendationParameters.material, RecommendationParameters.tool, RecommendationParameters.coating,
+                      RecommendationParameters.spindle_speed, RecommendationParameters.feed_table, RecommendationParameters.durability)
+        ).order_by(sa.desc(RecommendationParameters.durability)).all()
 
     else:
-        recomended_speed = RecomededSpeed.query.options(
-            load_only(RecomededSpeed.Material, RecomededSpeed.Tool, RecomededSpeed.Coating,
-                      RecomededSpeed.SpindleSpeed, RecomededSpeed.FeedTable, RecomededSpeed.Durability)
+        recomended_speed = RecommendationParameters.query.options(
+            load_only(RecommendationParameters.material, RecommendationParameters.tool, RecommendationParameters.coating,
+                      RecommendationParameters.spindle_speed, RecommendationParameters.feed_table, RecommendationParameters.durability)
         ).all()
 
     return render_template('recomended_speed.html', recomended_speed=recomended_speed)
@@ -72,7 +72,7 @@ def add():
                     render_template('add.html', material_form=material_form, coating_form=coating_form,
                                     tool_form=tool_form)
 
-                new_material = Material(
+                new_material = Materials(
                     Name=material_form.name.data,
                     PropPhysics=material_form.prop_physics.data,
                     Structure=material_form.structure.data,
@@ -100,7 +100,7 @@ def add():
                 return redirect('/add')
 
             if tool_form.submit.data and tool_form.validate_on_submit():
-                new_tool = Toolsdate(
+                new_tool = Tools(
                     Name=tool_form.name.data,
                     MaterialTool=tool_form.material_tool.data,
                     NumberTeeth=tool_form.number_teeth.data,
@@ -126,7 +126,7 @@ def materials_table():
     search_query = request.args.get('search_query', '')
 
     # Базовый запрос
-    materials_query = Material.query
+    materials_query = Materials.query
 
     # Фильтрация по типу материала, если выбран
     if selected_type_id and selected_type_id != 'all':
@@ -134,10 +134,10 @@ def materials_table():
 
     # Поиск по названию материала
     if search_query:
-        materials_query = materials_query.filter(Material.Name.ilike(f'%{search_query}%'))
+        materials_query = materials_query.filter(Materials.name.ilike(f'%{search_query}%'))
 
     # Получаем отсортированный список материалов
-    materials = materials_query.order_by(Material.Name).all()
+    materials = materials_query.order_by(Materials.name).all()
 
     return render_template('materials.html', materials=materials, material_types=material_types,
                            selected_type_id=selected_type_id, search_query=search_query)
@@ -148,23 +148,23 @@ def search_materials():
     search_query = request.args.get('search_query', '')
     type_id = request.args.get('type_id', 'all')
 
-    materials = Material.query
+    materials = Materials.query
     # Ищем материалы, соответствующие запросу
     if type_id != 'all':
         materials = materials.filter_by(type_id=type_id)
     if search_query:
-        filtered_materials = [material for material in materials.all() if search_query.lower() in material.Name.lower()]
+        filtered_materials = [material for material in materials.all() if search_query.lower() in material.name.lower()]
     else:
         filtered_materials = materials.all()
 
     # Преобразуем результат в список словарей
     materials_list = [{
         'id': material.id,
-        'name': material.Name,
-        'prop_physics': material.PropPhysics,
-        'structure': material.Structure,
-        'properties': material.Properties,
-        'gost': material.Gost
+        'name': material.name,
+        'prop_physics': material.prop_physics,
+        'structure': material.structure,
+        'properties': material.properties,
+        'gost': material.gost
     } for material in filtered_materials]
 
     return jsonify(materials_list)
@@ -172,9 +172,9 @@ def search_materials():
 @app.route('/materials/by_type/<int:type_id>')
 def get_materials_by_type(type_id):
     # Получаем материалы, соответствующие выбранному типу
-    materials = Material.query.filter_by(type_id=type_id).all()
+    materials = Materials.query.filter_by(type_id=type_id).all()
     # Преобразуем материалы в список словарей
-    materials_list = [{'id': material.id, 'name': material.Name} for material in materials]
+    materials_list = [{'id': material.id, 'name': material.name} for material in materials]
     return jsonify(materials_list)
 
 
@@ -242,7 +242,7 @@ def calculate():
 
 @app.route('/materials/<int:id>/delete')
 def delete_materials(id):
-    delete_str = Material.query.get_or_404(id)
+    delete_str = Materials.query.get_or_404(id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
@@ -253,13 +253,13 @@ def delete_materials(id):
 
 @app.route('/materials/<int:id>/update', methods=['GET', 'POST'])
 def materials_update(id):
-    materials = Material.query.get_or_404(id)
+    materials = Materials.query.get_or_404(id)
     if request.method == 'POST':
-        materials.name = request.form['Name']
-        materials.PropPhysics = request.form['NameP']
-        materials.Structure = request.form['NameX']
-        materials.Properties = request.form['NamePr']
-        materials.Gost = request.form['NameGost']
+        materials.name = request.form['name']
+        materials.prop_physics = request.form['NameP']
+        materials.structure = request.form['NameX']
+        materials.properties = request.form['NamePr']
+        materials.gost = request.form['NameGost']
         try:
             db.session.commit()
             return redirect('/materials')
@@ -271,13 +271,13 @@ def materials_update(id):
 
 @app.route("/material/<int:id>/info")
 def mat_info(id):
-    material = Material.query.get_or_404(id)
-    return render_template('mat_info.html', material=material)
+    material = Materials.query.get_or_404(id)
+    return render_template('material.html', material=material)
 
 
 @app.route('/coatings')
 def caotings():
-    coatings = Coating.query.order_by(Coating.Name).all()
+    coatings = Coating.query.order_by(Coating.name).all()
     return render_template('coating.html', coatings=coatings)
 
 
@@ -296,14 +296,14 @@ def delete_coating(id):
 def coating_update(id):
     coatings = Coating.query.get(id)
     if request.method == 'POST':
-        coatings.Name = request.form['Name1']
-        coatings.MaterialCoating = request.form['Name2']
-        coatings.TypeApplication = request.form['Name3']
-        coatings.MaxThickness = request.form['Name4']
-        coatings.NanoHardness = request.form['NameNano']
-        coatings.TemratureResistance = request.form['NameResistnce']
-        coatings.KoefficientFriction = request.form['NameKoef']
-        coatings.ColorCoating = request.form['Color']
+        coatings.name = request.form['Name1']
+        coatings.material_coating = request.form['Name2']
+        coatings.type_application = request.form['Name3']
+        coatings.max_thickness = request.form['Name4']
+        coatings.nano_hardness = request.form['NameNano']
+        coatings.temperature_resistance = request.form['NameResistnce']
+        coatings.coefficient_friction = request.form['NameKoef']
+        coatings.color_coating = request.form['Color']
 
         try:
             db.session.commit()
@@ -317,18 +317,18 @@ def coating_update(id):
 @app.route("/coating/<int:id>/info")
 def coat_info(id):
     coating = Coating.query.get_or_404(id)
-    return render_template('coat_info.html', coating=coating)
+    return render_template('coating.html', coating=coating)
 
 
 @app.route('/tools')
 def tools_table():
-    tools = Toolsdate.query.order_by(Toolsdate.Name).all()
+    tools = Tools.query.order_by(Tools.name).all()
     return render_template('tools.html', tools=tools)
 
 
 @app.route('/tool/<int:id>/delete')
 def delete_tool(id):
-    delete_str = Toolsdate.query.get_or_404(id)
+    delete_str = Tools.query.get_or_404(id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
@@ -339,12 +339,12 @@ def delete_tool(id):
 
 @app.route('/tool/<int:id>/update', methods=['GET', 'POST'])
 def tool_update(id):
-    tool = Toolsdate.query.get(id)
+    tool = Tools.query.get(id)
     if request.method == 'POST':
-        tool.Name = request.form['Name5']
-        tool.MaterialTool = request.form['Name6']
-        tool.NumberTeeth = request.form['Name8']
-        tool.Diameter = request.form['Name9']
+        tool.name = request.form['Name5']
+        tool.material_tool = request.form['Name6']
+        tool.number_teeth = request.form['Name8']
+        tool.diameter = request.form['Name9']
         try:
             db.session.commit()
             return redirect('/tools')
@@ -356,7 +356,7 @@ def tool_update(id):
 
 @app.route("/tool/<int:id>/info")
 def tools_info(id):
-    tool = Toolsdate.query.get_or_404(id)
+    tool = Tools.query.get_or_404(id)
     return render_template('tool_info.html', tool=tool)
 
 
@@ -374,22 +374,22 @@ def experiments_table():
     experiments_query = Experiments.query
 
     if material_filter:
-        experiments_query = experiments_query.filter(Experiments.Material.ilike(f'%{material_filter}%'))
+        experiments_query = experiments_query.filter(Experiments.material.ilike(f'%{material_filter}%'))
 
     if coating_filter:
-        experiments_query = experiments_query.filter(Experiments.Coating.ilike(f'%{coating_filter}%'))
+        experiments_query = experiments_query.filter(Experiments.coating.ilike(f'%{coating_filter}%'))
 
     if spindle_min:
-        experiments_query = experiments_query.filter(Experiments.SpindleSpeed >= spindle_min)
+        experiments_query = experiments_query.filter(Experiments.spindle_speed >= spindle_min)
 
     if spindle_max:
-        experiments_query = experiments_query.filter(Experiments.SpindleSpeed <= spindle_max)
+        experiments_query = experiments_query.filter(Experiments.spindle_speed <= spindle_max)
 
     if feed_min:
-        experiments_query = experiments_query.filter(Experiments.FeedTable >= feed_min)
+        experiments_query = experiments_query.filter(Experiments.feed_table >= feed_min)
 
     if feed_max:
-        experiments_query = experiments_query.filter(Experiments.FeedTable <= feed_max)
+        experiments_query = experiments_query.filter(Experiments.feed_table <= feed_max)
 
     if sort_by:
         if order == 'desc':
@@ -417,8 +417,8 @@ def adhesive():
 
 @app.route("/expected_parameters", methods=['GET', 'POST'])
 def expected_parameters():
-    materials = Material.query.all()
-    tools = Toolsdate.query.all()
+    materials = Materials.query.all()
+    tools = Tools.query.all()
     coatings = Coating.query.all()
     material_types = MaterialType.query.all()
 
@@ -447,9 +447,9 @@ def update_graph_data():
     tool_id = data.get('tool_id')
     coating_id = data.get('coating_id')
 
-    tool = Toolsdate.query.get(tool_id)
-    diameter = tool.Diameter
-    count_of_teeth = tool.NumberTeeth
+    tool = Tools.query.get(tool_id)
+    diameter = tool.diameter
+    count_of_teeth = tool.number_teeth
 
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
