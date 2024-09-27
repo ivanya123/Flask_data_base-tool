@@ -2,7 +2,7 @@ import os
 from typing import Any, List, Tuple
 
 from my_app import db,app
-from my_app.models import CsvFiles, Experiments, RecommendationParameters, Materials,Tools,Coating
+from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating
 import pandas as pd
 import matplotlib.pyplot as plt
 import shutil
@@ -63,7 +63,7 @@ def obrabotka_csv(data):
   else:
       None
   coating = coating_1(df.columns[1].split(',')[1])
-  spindelSpeed = float(df.columns[1].split(',')[3].replace('.csv_files',''))
+  spindelSpeed = float(df.columns[1].split(',')[3].replace('.csv',''))
   TableFeed = float(df.columns[1].split(',')[2])
   LengthPath = df['L, мм'].iloc[-1]
   Durability = LengthPath/TableFeed
@@ -89,27 +89,27 @@ def process_csv_files(file_path):
     shutil.copyfile(file_path[0], new_file_path_s)
     shutil.copyfile(file_path[1], new_file_path_t)
 
-    csv_file = CsvFiles(filename_strengh = os.path.basename(file_path[0]), path = new_file_path_s, filename_temrature=os.path.basename(new_file_path_t))
+    csv_file = Csv_Files(filename_strengh = os.path.basename(file_path[0]),  path = new_file_path_s, filename_temrature=os.path.basename(new_file_path_t))
     db.session.add(csv_file)
     db.session.commit()
-    id_csv_filter = CsvFiles.query.filter_by(filename_strengh = os.path.basename(file_path[0])).first()
+    id_csv_filter = Csv_Files.query.filter_by(filename_strengh = os.path.basename(file_path[0])).first()
     id_csv = id_csv_filter.id
     path_gr_s = graphiks(file_path[0], id_csv)
     path_gr_t = graphikt(file_path[1], id_csv)
     print(path_gr_s)
     print(path_gr_t)
-    id_csv_filter.path_graphic_s = path_gr_s
-    id_csv_filter.path_graphic_t = path_gr_t
+    id_csv_filter.path_graphik_s = path_gr_s
+    id_csv_filter.path_graphik_t = path_gr_t
     db.session.commit()
-    id_csv_filter = CsvFiles.query.filter_by(filename_strengh=os.path.basename(file_path[0])).first()
+    id_csv_filter = Csv_Files.query.filter_by(filename_strengh=os.path.basename(file_path[0])).first()
     list_parameters.append(id_csv)
-    material = Materials.query.filter_by(Name = list_parameters[0]).first()
-    tool = Tools.query.filter_by(Name = list_parameters[1]).first()
+    material = Material.query.filter_by(Name = list_parameters[0]).first()
+    tool = Toolsdate.query.filter_by(Name = list_parameters[1]).first()
     coating = Coating.query.filter_by(Name = list_parameters[2]).first()
 
-    experiment = Experiments(Material=material.name,
-                             Tool=tool.name,
-                             Coating=coating.name,
+    experiment = Experiments(Material=material.Name,
+                             Tool=tool.Name,
+                             Coating=coating.Name,
                              SpindleSpeed=list_parameters[3],
                              FeedTable=list_parameters[4],
                              DepthCut=list_parameters[5],

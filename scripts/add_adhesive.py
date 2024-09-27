@@ -1,5 +1,5 @@
 from my_app import db,app
-from my_app.models import CsvFiles, Experiments, RecommendationParameters, Materials,Tools,Coating, Adhesive
+from my_app.models import Csv_Files, Experiments, RecomededSpeed, Material,Toolsdate,Coating, Adhesive
 import csv
 import random
 
@@ -7,8 +7,8 @@ import random
 app.app_context().push()
 
 
-# with open('adhesive.csv_files', encoding='utf-8') as csvfile:
-#     reader = csv_files.DictReader(csvfile)
+# with open('adhesive.csv', encoding='utf-8') as csvfile:
+#     reader = csv.DictReader(csvfile)
 #     for row in reader:
 #         material = row['material'].strip()
 #         coating = row['coating'].strip()
@@ -31,10 +31,10 @@ app.app_context().push()
 
 # random.randint(160, 180)
 roughness = [0.8, 1.0, 1.6]
-recomeded_speed = RecommendationParameters.query.all()
+recomeded_speed = RecomededSpeed.query.all()
 
 for rec in recomeded_speed:
-    rec.roughness = random.choice(roughness)
+    rec.Roughness = random.choice(roughness)
     db.session.commit()
 
 
