@@ -11,9 +11,9 @@ from my_app.models import Materials, Tools, Coating, Experiments, Recommendation
 
 @app.route('/')
 def select_parameters():
-    unique_materials = RecommendationParameters.query.with_entities(RecommendationParameters.material).distinct().all()
-    unique_tools = RecommendationParameters.query.with_entities(RecommendationParameters.tool).distinct().all()
-    unique_coatings = RecommendationParameters.query.with_entities(RecommendationParameters.coating).distinct().all()
+    unique_materials = Materials.query.join(RecommendationParameters).distinct().all()
+    unique_tools = Tools.query.join(RecommendationParameters).distinct().all()
+    unique_coatings = Coating.query.join(RecommendationParameters).distinct().all()
 
     return render_template('home.html', unique_materials=unique_materials, unique_tools=unique_tools,
                            unique_coatings=unique_coatings)
@@ -22,28 +22,26 @@ def select_parameters():
 @app.route('/recommended_speed', methods=['POST', 'GET'])
 def recomended_speeds():
     if request.method == 'POST':
-        material = request.form['material']
-        tool = request.form['tool']
-        coating = request.form['coating']
+        print(request.form)
+        material = int(request.form['material'])
+        tool = int(request.form['tool'])
+        coating = int(request.form['coating']) if request.form['coating'] != 'None' else "None"
         filters = {
-            RecommendationParameters.material: material,
-            RecommendationParameters.tool: tool,
+            'material_id': material,
+            'tool_id': tool,
         }
         if coating != 'None':
-            filters[RecommendationParameters.coating] = coating
+            filters['coating_id'] = coating
 
-        recomended_speed = RecommendationParameters.query.filter_by(**filters).options(
-            load_only(RecommendationParameters.material, RecommendationParameters.tool, RecommendationParameters.coating,
-                      RecommendationParameters.spindle_speed, RecommendationParameters.feed_table, RecommendationParameters.durability)
-        ).order_by(sa.desc(RecommendationParameters.durability)).all()
+        recommendation_parameters = RecommendationParameters.query.filter_by(
+            **filters
+        ).order_by(
+            sa.desc(RecommendationParameters.durability)).all()
 
     else:
-        recomended_speed = RecommendationParameters.query.options(
-            load_only(RecommendationParameters.material, RecommendationParameters.tool, RecommendationParameters.coating,
-                      RecommendationParameters.spindle_speed, RecommendationParameters.feed_table, RecommendationParameters.durability)
-        ).all()
+        recommendation_parameters = RecommendationParameters.query.all()
 
-    return render_template('recomended_speed.html', recomended_speed=recomended_speed)
+    return render_template('recomended_speed.html', recomended_speed=recommendation_parameters)
 
 
 @app.route('/add', methods=['POST', 'GET'])
@@ -169,6 +167,7 @@ def search_materials():
 
     return jsonify(materials_list)
 
+
 @app.route('/materials/by_type/<int:type_id>')
 def get_materials_by_type(type_id):
     # Получаем материалы, соответствующие выбранному типу
@@ -198,7 +197,6 @@ def calculate():
     tool_id = request.args.get('tool_id')
     coating_id = request.args.get('coating_id')
 
-
     # Получаем коэффициенты из базы данных
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
@@ -226,7 +224,8 @@ def calculate():
     cutting_force = coefficient.cutting_force_coefficient * (cutting_speed ** a_force) * (feed_per_tooth ** b_force)
 
     # Расчет температуры резания
-    cutting_temperature = coefficient.cutting_temperature_coefficient * (cutting_speed ** a_temp) * (feed_per_tooth ** b_temp)
+    cutting_temperature = coefficient.cutting_temperature_coefficient * (cutting_speed ** a_temp) * (
+            feed_per_tooth ** b_temp)
 
     # Расчет стойкости инструмента
     tool_life = coefficient.durability_coefficient * (cutting_speed ** a_life) * (feed_per_tooth ** b_life)
@@ -236,8 +235,6 @@ def calculate():
         'cutting_temperature': cutting_temperature,
         'tool_life': tool_life
     })
-
-
 
 
 @app.route('/materials/<int:id>/delete')
@@ -399,7 +396,10 @@ def experiments_table():
 
     experiments = experiments_query.all()
 
-    return render_template('experiment.html', experiment=experiments, sort_by=sort_by, order=order,
+    return render_template('experiment.html',
+                           experiment=experiments,
+                           sort_by=sort_by,
+                           order=order,
                            request_args=request.args)
 
 
@@ -427,7 +427,6 @@ def expected_parameters():
     selected_coating = None
     coefficient = None
 
-
     return render_template(
         'expected_parameters.html',
         materials=materials,
@@ -439,6 +438,7 @@ def expected_parameters():
         selected_coating=selected_coating,
         material_types=material_types
     )
+
 
 @app.route('/update_graph_data', methods=['POST'])
 def update_graph_data():
@@ -469,6 +469,7 @@ def update_graph_data():
         }
 
     return jsonify({'status': 'success'})
+
 
 @app.route('/update_dash_values', methods=['GET', 'POST'])
 def update_dash_values():

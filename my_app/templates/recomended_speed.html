@@ -41,15 +41,15 @@
         <tbody>
             {% for i in recomended_speed %}
             <tr>
-                <td><a href="/material/{{i.mat_info.id}}/info">{{ i.Materials }}</a></td>
-                <td><a href="/tool/{{i.tools_info.id}}/info">{{ i.Tool }}</a></td>
-                <td><a href="/coating/{{i.coat_info.id}}/info">{{ i.Coating }}</a></td>
-                <td>{{ i.SpindleSpeed }}</td>
-                <td>{{ i.FeedTable }}</td>
-                <td>{{ i.Roughness }}</td>
-                <td>{{ i.Hardening }}</td>
-                <td>{{ i.Microhardness }}</td>
-                <td>{{ i.Durability }} </td>
+                <td><a href="/material/{{i.material_id}}/info">{{ i.material.name }}</a></td>
+                <td><a href="/tool/{{i.tool_id}}/info">{{ i.tool.name }}</a></td>
+                <td><a href="/coating/{{i.coating_id}}/info">{{ i.coating.name }}</a></td>
+                <td>{{ i.spindle_speed }}</td>
+                <td>{{ i.feed_table }}</td>
+                <td>{{ i.roughness }}</td>
+                <td>{{ i.hardening }}</td>
+                <td>{{ i.durability }}</td>
+                <td>{{ i.micro_hardness }} </td>
             </tr>
             {% endfor %}
         </tbody>

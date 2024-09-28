@@ -131,25 +131,25 @@ tools_dict = {
 #         print(tool.id, tool.name)
 
 
-# for i in recommendation_parameters.index:
-#     if recommendation_parameters.loc[i, "Tool"] in tools_dict:
-#         material_id = Materials.query.filter_by(name=recommendation_parameters.loc[i, "Material"]).first().id
-#         coating_id = Coating.query.filter_by(name=recommendation_parameters.loc[i, "Coating"]).first().id
-#         tool_id = Tools.query.filter_by(name=tools_dict[recommendation_parameters.loc[i, "Tool"]]).first().id
-#         new_recommendation_parameters = RecommendationParameters(
-#             material_id=recommendation_parameters.loc[i, "Material"],
-#             coating_id=recommendation_parameters.loc[i, "Coating"],
-#             tool_id=recommendation_parameters.loc[i, "Tool"],
-#             spindle_speed=int(recommendation_parameters.loc[i, "SpindleSpeed"]),
-#             feed_table=recommendation_parameters.loc[i, "FeedTable"],
-#             roughness=recommendation_parameters.loc[i, "Roughness"],
-#             hardening=recommendation_parameters.loc[i, "Hardening"],
-#             durability=recommendation_parameters.loc[i, "Durability"],
-#             micro_hardness=recommendation_parameters.loc[i, "Microhardness"]
-#         )
-#         db.session.add(new_recommendation_parameters)
-#
-# db.session.commit()
+for i in recommendation_parameters.index:
+    if recommendation_parameters.loc[i, "Tool"] in tools_dict:
+        material_id = Materials.query.filter_by(name=recommendation_parameters.loc[i, "Material"]).first().id
+        coating_id = Coating.query.filter_by(name=recommendation_parameters.loc[i, "Coating"]).first().id
+        tool_id = Tools.query.filter_by(name=tools_dict[recommendation_parameters.loc[i, "Tool"]]).first().id
+        new_recommendation_parameters = RecommendationParameters(
+            material_id=material_id,
+            coating_id=coating_id,
+            tool_id=tool_id,
+            spindle_speed=int(recommendation_parameters.loc[i, "SpindleSpeed"]),
+            feed_table=recommendation_parameters.loc[i, "FeedTable"],
+            roughness=recommendation_parameters.loc[i, "Roughness"],
+            hardening=recommendation_parameters.loc[i, "Hardening"],
+            durability=recommendation_parameters.loc[i, "Durability"],
+            micro_hardness=recommendation_parameters.loc[i, "Microhardness"]
+        )
+        db.session.add(new_recommendation_parameters)
+
+db.session.commit()
 
 
 # recommendation_parameters = RecommendationParameters.query.all()
@@ -186,30 +186,30 @@ tools_dict = {
 #     db.session.commit()
 
 
-experimnts = pd.read_sql_query("SELECT * FROM Experiments", engine)
-print(experimnts.columns)
-for i in experimnts.index:
-    material_id = Materials.query.filter_by(name=experimnts.loc[i, "Material"]).first().id
-    try:
-        coating_id = Coating.query.filter_by(
-            name=experimnts.loc[i, "Coating"].replace('AlTiNCrN3', 'AlTiCrN3')).first().id
-    except:
-        raise ValueError(f'{experimnts.loc[i, "Coating"]}')
-    tool_id = Tools.query.filter_by(name=experimnts.loc[i, "Tool"]).first().id
-    new_experiment = Experiments(
-        material_id=material_id,
-        coating_id=coating_id,
-        tool_id=tool_id,
-        spindle_speed=float(experimnts.loc[i, "SpindleSpeed"]),
-        feed_table=experimnts.loc[i, "FeedTable"],
-        depth_cut=experimnts.loc[i, "DepthCut"],
-        width_cut=experimnts.loc[i, "WidthCut"],
-        length_path=experimnts.loc[i, "LengthPath"],
-        durability=experimnts.loc[i, "Durability"],
-        csv_id=int(experimnts.loc[i, "csv_id"])
-    )
-    db.session.add(new_experiment)
-db.session.commit()
+# experimnts = pd.read_sql_query("SELECT * FROM Experiments", engine)
+# print(experimnts.columns)
+# for i in experimnts.index:
+#     material_id = Materials.query.filter_by(name=experimnts.loc[i, "Material"]).first().id
+#     try:
+#         coating_id = Coating.query.filter_by(
+#             name=experimnts.loc[i, "Coating"].replace('AlTiNCrN3', 'AlTiCrN3')).first().id
+#     except:
+#         raise ValueError(f'{experimnts.loc[i, "Coating"]}')
+#     tool_id = Tools.query.filter_by(name=experimnts.loc[i, "Tool"]).first().id
+#     new_experiment = Experiments(
+#         material_id=material_id,
+#         coating_id=coating_id,
+#         tool_id=tool_id,
+#         spindle_speed=float(experimnts.loc[i, "SpindleSpeed"]),
+#         feed_table=experimnts.loc[i, "FeedTable"],
+#         depth_cut=experimnts.loc[i, "DepthCut"],
+#         width_cut=experimnts.loc[i, "WidthCut"],
+#         length_path=experimnts.loc[i, "LengthPath"],
+#         durability=experimnts.loc[i, "Durability"],
+#         csv_id=int(experimnts.loc[i, "csv_id"])
+#     )
+#     db.session.add(new_experiment)
+# db.session.commit()
 
 # experiments = Experiments.query.all()
 # for experiment in experiments:
