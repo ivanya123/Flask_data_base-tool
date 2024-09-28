@@ -18,7 +18,7 @@ class Materials(db.Model):
     material_type = db.relationship('MaterialType', back_populates='materials')
 
     def __repr__(self):
-        return '<Materials {}>'.format(self.id)
+        return '<Materials {}>'.format(self.name)
 
 
 class Tools(db.Model):
@@ -211,7 +211,7 @@ class Adhesive(db.Model):
 
     material_id = db.Column(db.Integer, db.ForeignKey('materials.id'), primary_key=True, nullable=False)
     coating_id = db.Column(db.Integer, db.ForeignKey('coating.id'), primary_key=True, nullable=False)
-    temperature = db.Column(sa.Integer, nullable=False)
+    temperature = db.Column(sa.Integer, nullable=False, primary_key=True)
     bond_strength_adhesive = db.Column(sa.Float, nullable=False)
     normal_shear_strength = db.Column(sa.Float, nullable=False)
 
@@ -248,9 +248,12 @@ class Coefficients(db.Model):
 
 
 class MaterialType(db.Model):
+    __tablename__ = 'material_type'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(sa.String(64), unique=True, nullable=False)  # Название типа материала
     materials = db.relationship('Materials', back_populates='material_type')  # Связь с материалами
 
     def __repr__(self):
         return f'<MaterialType {self.name}>'
+
+

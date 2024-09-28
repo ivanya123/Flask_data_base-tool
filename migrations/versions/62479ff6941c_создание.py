@@ -1,8 +1,8 @@
-"""Создание базы данных
+"""Создание
 
-Revision ID: 0f987d28feb8
+Revision ID: 62479ff6941c
 Revises: 
-Create Date: 2024-09-27 16:07:10.517996
+Create Date: 2024-09-27 23:35:09.856423
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0f987d28feb8'
+revision = '62479ff6941c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -132,9 +132,10 @@ def upgrade():
     sa.Column('temperature', sa.Integer(), nullable=False),
     sa.Column('bond_strength_adhesive', sa.Float(), nullable=False),
     sa.Column('normal_shear_strength', sa.Float(), nullable=False),
+    sa.Column('new_column', sa.Float(), nullable=False),
     sa.ForeignKeyConstraint(['coating_id'], ['coating.id'], ),
     sa.ForeignKeyConstraint(['material_id'], ['materials.id'], ),
-    sa.PrimaryKeyConstraint('material_id', 'coating_id')
+    sa.PrimaryKeyConstraint('material_id', 'coating_id', 'temperature')
     )
     op.create_table('coefficients',
     sa.Column('material_id', sa.Integer(), nullable=False),
