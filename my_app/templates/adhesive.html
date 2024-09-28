@@ -38,12 +38,12 @@
         <tbody>
             {% for i in adhesive %}
             <tr>
-                <td>{{ i.material }}</td>
-                <td>{{ i.coating }}</td>
+                <td>{{ i.material.name }}</td>
+                <td>{{ i.coating.name }}</td>
                 <td>{{ i.temperature }}</td>
-                <td>{{ i.bond_strength_adhesive }} </td>
-                <td>{{ i.normal_shear_strength }} </td>
-                <td>{{ i.koefficient_shear }} </td>
+                <td>{{ i.bond_strength_adhesive | round(2) }} </td>
+                <td>{{ i.normal_shear_strength | int }} </td>
+                <td>{{ i.coefficient_shear | round(3)}} </td>
             </tr>
             {% endfor %}
         </tbody>

@@ -56,13 +56,13 @@
         <tbody>
             {% for i in experiment %}
             <tr>
-                <td><a href="/material/{{i.mat_info.id}}/info">{{ i.Materials }}</a></td>
-                <td>{{ i.Tool }}</td>
-                <td>{{ i.Coating }}</td>
-                <td>{{ i.SpindleSpeed }}</td>
-                <td>{{ i.FeedTable }}</td>
-                <td>{{ i.LengthPath }}</td>
-                <td>{{ i.Durability }}</td>
+                <td><a href="/material/{{i.material.id}}/info">{{ i.material.name }}</a></td>
+                <td>{{ i.tool.name }}</td>
+                <td>{{ i.coating.name }}</td>
+                <td>{{ i.spindle_speed | int }}</td>
+                <td>{{ i.feed_table | int }}</td>
+                <td>{{ i.length_path | round(2)}}</td>
+                <td>{{ i.durability | round(2)}}</td>
                 <td>
                     <a href="/experiments/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
                     <a href="/experiments/{{i.id}}/info" class="btn btn-success">Подробнее</a>

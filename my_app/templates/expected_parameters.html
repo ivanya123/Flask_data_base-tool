@@ -80,7 +80,7 @@
             <select class="form-control" id="tool" name="tool">
                 {% for tool in tools %}
                 <option value="{{ tool.id }}" {% if tool.id == selected_tool %}selected{% endif %}>
-                    {{ tool.Name }}
+                    {{ tool.name }}, {{ tool.name_easy }}
                 </option>
                 {% endfor %}
             </select>
@@ -91,7 +91,7 @@
             <select class="form-control" id="coating" name="coating">
                 {% for coating in coatings %}
                 <option value="{{ coating.id }}" {% if coating.id == selected_coating %}selected{% endif %}>
-                    {{ coating.Name }}
+                    {{ coating.name }}
                 </option>
                 {% endfor %}
             </select>

@@ -159,7 +159,7 @@ class Experiments(db.Model):
     @property
     def cutter_speed(self):
         if self.tool:
-            d = self.tool.diameter
+            d = self.tool.milling_geometry.diameter
             return math.pi * d * self.spindle_speed / 1000
         else:
             return None
@@ -167,7 +167,7 @@ class Experiments(db.Model):
     @property
     def feed_of_teeth(self):
         if self.tool:
-            z = self.tool.number_teeth
+            z = self.tool.milling_geometry.number_teeth
             return self.feed_table / (z * self.spindle_speed)
 
     def __repr__(self):

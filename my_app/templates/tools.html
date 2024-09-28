@@ -36,10 +36,10 @@
         <tbody>
             {% for i in tools %}
             <tr>
-                <td>{{ i.Name }}</td>
-                <td>{{ i.MaterialTool }}</td>
-                <td>{{ i.NumberTeeth }}</td>
-                <td>{{ i.Diameter }}</td>
+                <td>{{ i.name }}, {{i.name_easy}}</td>
+                <td>{{ i.material_tool }}</td>
+                <td>{{ i.milling_geometry.number_teeth }}</td>
+                <td>{{ i.milling_geometry.diameter | int}}</td>
                 <td><a href="/tool/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
                 <a href="/tool/{{i.id}}/update"  class="btn btn-success">Изменить</a>
                 </td>

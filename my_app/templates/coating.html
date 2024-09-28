@@ -41,14 +41,14 @@
         <tbody>
             {% for i in coatings %}
             <tr>
-                <td>{{ i.Name }}</td>
-                <td>{{ i.MaterialCoating }}</td>
-                <td>{{ i.TypeApplication }}</td>
-                <td>{{ i.ColorCoating }}</td>
-                <td>{{ i.MaxThickness }}</td>
-                <td>{{ i.NanoHardness }}</td>
-                <td>{{ i.TemratureResistance }}</td>
-                <td>{{ i.KoefficientFriction }}</td>
+                <td>{{ i.name }}</td>
+                <td>{{ i.material_coating }}</td>
+                <td>{{ i.type_application }}</td>
+                <td>{{ i.color_coating }}</td>
+                <td>{{ i.max_thickness }}</td>
+                <td>{{ i.nano_hardness }}</td>
+                <td>{{ i.temperature_resistance | int }}</td>
+                <td>{{ i.coefficient_friction }}</td>
                 <td><a href="/coating/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
                 <a href="/coating/{{i.id}}/update"  class="btn btn-success">Изменить</a></td>
             </tr>

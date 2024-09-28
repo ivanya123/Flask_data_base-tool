@@ -56,11 +56,11 @@
         <tbody id="materials-body">
             {% for i in materials %}
             <tr>
-                <td>{{ i.Name }}</td>
-                <td>{{ i.PropPhysics }}</td>
-                <td>{{ i.Structure }}</td>
-                <td>{{ i.Properties }}</td>
-                <td>{{ i.Gost }}</td>
+                <td>{{ i.name }}</td>
+                <td>{{ i.prop_physics }}</td>
+                <td>{{ i.structure }}</td>
+                <td>{{ i.properties }}</td>
+                <td>{{ i.gost }}</td>
                 <td>
                     <a href="/materials/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
                     <a href="/materials/{{i.id}}/update" class="btn btn-success">Изменить</a>

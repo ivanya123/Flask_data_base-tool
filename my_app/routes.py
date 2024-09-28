@@ -448,8 +448,8 @@ def update_graph_data():
     coating_id = data.get('coating_id')
 
     tool = Tools.query.get(tool_id)
-    diameter = tool.diameter
-    count_of_teeth = tool.number_teeth
+    diameter = tool.milling_geometry.diameter
+    count_of_teeth = tool.milling_geometry.number_teeth
 
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
