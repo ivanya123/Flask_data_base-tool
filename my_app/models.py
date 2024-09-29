@@ -100,6 +100,7 @@ class Insert(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'))
+    name = db.Column(sa.String(64))
     material = db.Column(sa.String(64))
 
     tool = db.relationship('Tools', back_populates='inserts')

@@ -1,12 +1,10 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import render_template, request, redirect, jsonify
 import sqlalchemy as sa
-from sqlalchemy.orm import load_only
-from sqlalchemy import func
 
-from my_app.forms import MaterialForm, CoatingForm, ToolForm
+from my_app.forms import MaterialForm, CoatingForm, MillingGeometryForm, TurningGeometryForm, DrillGeometryForm
 from my_app import app, db
 from my_app.models import Materials, Tools, Coating, Experiments, RecommendationParameters, Adhesive, Coefficients, \
-    MaterialType
+    MaterialType, MillingGeometry, TurningGeometry, DrillGeometry
 
 
 @app.route('/')
@@ -48,7 +46,9 @@ def recomended_speeds():
 def add():
     material_form = MaterialForm()
     coating_form = CoatingForm()
-    tool_form = ToolForm()
+    milling_geometry_form = MillingGeometryForm()
+    turning_form = TurningGeometryForm()
+    drill_form = DrillGeometryForm()
 
     if request.method == 'POST':
         try:
@@ -68,14 +68,14 @@ def add():
                 if type_id == 0:
                     material_form.type_id.errors.append('Пожалуйста, выберите тип материала или добавьте новый.')
                     render_template('add.html', material_form=material_form, coating_form=coating_form,
-                                    tool_form=tool_form)
+                                    tool_form=milling_geometry_form)
 
                 new_material = Materials(
-                    Name=material_form.name.data,
-                    PropPhysics=material_form.prop_physics.data,
-                    Structure=material_form.structure.data,
-                    Properties=material_form.properties.data,
-                    Gost=material_form.gost.data,
+                    name=material_form.name.data,
+                    prop_physics=material_form.prop_physics.data,
+                    structure=material_form.structure.data,
+                    properties=material_form.properties.data,
+                    gost=material_form.gost.data,
                     type_id=type_id  # Сохранение типа материала
                 )
                 db.session.add(new_material)
@@ -84,26 +84,40 @@ def add():
 
             if coating_form.submit.data and coating_form.validate_on_submit():
                 new_coating = Coating(
-                    Name=coating_form.name.data,
-                    MaterialCoating=coating_form.material_coating.data,
-                    TypeApplication=coating_form.type_application.data,
-                    MaxThickness=coating_form.max_thickness.data,
-                    NanoHardness=coating_form.nanohardness.data,
-                    TemratureResistance=coating_form.temperature_resistance.data,
-                    KoefficientFriction=coating_form.koefficient_friction.data,
-                    ColorCoating=coating_form.color_coating.data
+                    name=coating_form.name.data,
+                    material_coating=coating_form.material_coating.data,
+                    type_application=coating_form.type_application.data,
+                    max_thickness=coating_form.max_thickness.data,
+                    nano_hardness=coating_form.nanohardness.data,
+                    temperature_resistance=coating_form.temperature_resistance.data,
+                    coefficient_friction=coating_form.koefficient_friction.data,
+                    color_coating=coating_form.color_coating.data
                 )
                 db.session.add(new_coating)
                 db.session.commit()
                 return redirect('/add')
 
-            if tool_form.submit.data and tool_form.validate_on_submit():
+            if milling_geometry_form.submit.data and milling_geometry_form.validate_on_submit():
                 new_tool = Tools(
-                    Name=tool_form.name.data,
-                    MaterialTool=tool_form.material_tool.data,
-                    NumberTeeth=tool_form.number_teeth.data,
-                    Diameter=tool_form.diameter.data
+                    name=milling_geometry_form.name.data,
+                    name_easy=milling_geometry_form.name_easy.data,
+                    tool_type=milling_geometry_form.tool_type,
+                    material_tool=milling_geometry_form.material_tool.data,
+                    is_indexable=milling_geometry_form.is_insert.data
                 )
+                new_milling_geometry = MillingGeometry(
+                    diameter=milling_geometry_form.diameter.data,
+                    number_teeth=milling_geometry_form.number_teeth.data,
+                    front_angle=milling_geometry_form.front_angle.data,
+                    spiral_angle=milling_geometry_form.spiral_angle.data,
+                    f_rear_angle=milling_geometry_form.f_rear_angle.data,
+                    s_rear_angle=milling_geometry_form.s_rear_angle.data,
+                    main_rear_angle=milling_geometry_form.main_rear_angle.data,
+                    angular_pitch=milling_geometry_form.angular_pitch.data
+                )
+
+                new_tool.milling_geometry = new_milling_geometry
+
                 db.session.add(new_tool)
                 db.session.commit()
                 return redirect('/add')
@@ -111,7 +125,9 @@ def add():
         except Exception as e:
             return f'Ошибка: {e}'
 
-    return render_template('add.html', material_form=material_form, coating_form=coating_form, tool_form=tool_form)
+    return render_template('add.html', material_form=material_form, coating_form=coating_form,
+                           milling_geometry_form=milling_geometry_form, turning_form=turning_form,
+                           drill_form=drill_form)
 
 
 @app.route('/materials', methods=['GET', 'POST'])
@@ -237,20 +253,20 @@ def calculate():
     })
 
 
-@app.route('/materials/<int:id>/delete')
-def delete_materials(id):
-    delete_str = Materials.query.get_or_404(id)
+@app.route('/materials/<int:materaial_id>/delete')
+def delete_materials(materaial_id):
+    delete_str = Materials.query.get_or_404(materaial_id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
         return redirect('/materials')
-    except:
+    except Exception:
         return 'Ошибка при удалении'
 
 
-@app.route('/materials/<int:id>/update', methods=['GET', 'POST'])
-def materials_update(id):
-    materials = Materials.query.get_or_404(id)
+@app.route('/materials/<int:materaial_id>/update', methods=['GET', 'POST'])
+def materials_update(material_id):
+    materials = Materials.query.get_or_404(material_id)
     if request.method == 'POST':
         materials.name = request.form['name']
         materials.prop_physics = request.form['NameP']
@@ -266,9 +282,9 @@ def materials_update(id):
     return render_template('materials_update.html', materials=materials)
 
 
-@app.route("/material/<int:id>/info")
-def mat_info(id):
-    material = Materials.query.get_or_404(id)
+@app.route("/material/<int:materaial_id>/info")
+def mat_info(material_id):
+    material = Materials.query.get_or_404(material_id)
     return render_template('material.html', material=material)
 
 
@@ -278,9 +294,9 @@ def caotings():
     return render_template('coating.html', coatings=coatings)
 
 
-@app.route('/coating/<int:id>/delete')
-def delete_coating(id):
-    delete_str = Coating.query.get_or_404(id)
+@app.route('/coating/<int:coating_id>/delete')
+def delete_coating(coating_id):
+    delete_str = Coating.query.get_or_404(coating_id)
     try:
         db.session.delete(delete_str)
         db.session.commit()
@@ -289,9 +305,9 @@ def delete_coating(id):
         return 'Ошибка при удалении'
 
 
-@app.route('/coating/<int:id>/update', methods=['GET', 'POST'])
-def coating_update(id):
-    coatings = Coating.query.get(id)
+@app.route('/coating/<int:coating_id>/update', methods=['GET', 'POST'])
+def coating_update(coating_id):
+    coatings = Coating.query.get(coating_id)
     if request.method == 'POST':
         coatings.name = request.form['Name1']
         coatings.material_coating = request.form['Name2']
@@ -311,9 +327,9 @@ def coating_update(id):
     return render_template('coating_update.html', coating=coatings)
 
 
-@app.route("/coating/<int:id>/info")
-def coat_info(id):
-    coating = Coating.query.get_or_404(id)
+@app.route("/coating/<int:coating_id>/info")
+def coat_info(coating_id):
+    coating = Coating.query.get_or_404(coating_id)
     return render_template('coating.html', coating=coating)
 
 
@@ -323,20 +339,27 @@ def tools_table():
     return render_template('tools.html', tools=tools)
 
 
-@app.route('/tool/<int:id>/delete')
-def delete_tool(id):
-    delete_str = Tools.query.get_or_404(id)
+@app.route('/tool/<int:tool_id>/delete')
+def delete_tool(tool_id):
+    delete_str = Tools.query.get_or_404(tool_id)
+    tool_geometry = [getattr(delete_str, 'milling_geometry'),
+                     getattr(delete_str, 'turning_geometry'),
+                     getattr(delete_str, 'drill_geometry')]
+
     try:
         db.session.delete(delete_str)
+        for geom in tool_geometry:
+            if geom:
+                db.session.delete(geom)
         db.session.commit()
         return redirect('/tools')
     except:
         return 'Ошибка при удалении'
 
 
-@app.route('/tool/<int:id>/update', methods=['GET', 'POST'])
-def tool_update(id):
-    tool = Tools.query.get(id)
+@app.route('/tool/<int:tool_id>/update', methods=['GET', 'POST'])
+def tool_update(tool_id):
+    tool = Tools.query.get(tool_id)
     if request.method == 'POST':
         tool.name = request.form['Name5']
         tool.material_tool = request.form['Name6']
@@ -351,9 +374,9 @@ def tool_update(id):
     return render_template('tool_update.html', tool=tool)
 
 
-@app.route("/tool/<int:id>/info")
-def tools_info(id):
-    tool = Tools.query.get_or_404(id)
+@app.route("/tool/<int:tool_id>/info")
+def tools_info(tool_id):
+    tool = Tools.query.get_or_404(tool_id)
     return render_template('tool_info.html', tool=tool)
 
 
@@ -403,16 +426,16 @@ def experiments_table():
                            request_args=request.args)
 
 
-@app.route("/experiments/<int:id>/info")
-def experiments_info(id):
-    experiment = Experiments.query.get_or_404(id)
+@app.route("/experiments/<int:experiment_id>/info")
+def experiments_info(experiment_id):
+    experiment = Experiments.query.get_or_404(experiment_id)
     return render_template('experiment_info.html', experiment=experiment)
 
 
 @app.route("/adhesive")
 def adhesive():
-    adhesive = Adhesive.query.all()
-    return render_template('adhesive.html', adhesive=adhesive)
+    adhesive_table = Adhesive.query.all()
+    return render_template('adhesive.html', adhesive=adhesive_table)
 
 
 @app.route("/expected_parameters", methods=['GET', 'POST'])
