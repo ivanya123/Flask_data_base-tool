@@ -49,8 +49,12 @@
                 <td>{{ i.nano_hardness }}</td>
                 <td>{{ i.temperature_resistance | int }}</td>
                 <td>{{ i.coefficient_friction }}</td>
-                <td><a href="/coating/{{i.id}}/delete"  class="btn btn-warning">Удалить</a>
-                <a href="/coating/{{i.id}}/update"  class="btn btn-success">Изменить</a></td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Basic outlined example">
+                        <a href="/coating/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
+                        <a href="/coating/{{i.id}}/update" class="btn btn-success">Изменить</a>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

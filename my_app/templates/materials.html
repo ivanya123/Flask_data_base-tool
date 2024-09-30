@@ -24,25 +24,28 @@
     <h1> Таблица материалов </h1>
 
     <!-- Форма фильтрации и поиска -->
-    <form method="GET" action="/materials" class="form-inline mb-3">
-        <div class="form-group mr-2">
-            <label for="type_id">Тип материала:</label>
-            <select name="type_id" id="type_id" class="form-control ml-2">
-                <option value="all" {% if selected_type_id == 'all' %}selected{% endif %}>Все</option>
-                {% for type in material_types %}
-                <option value="{{ type.id }}" {% if selected_type_id == type.id|string %}selected{% endif %}>{{ type.name }}</option>
-                {% endfor %}
-            </select>
+    <form method="GET" action="/materials" class="form-control" style="margin: 10px">
+        <div class="form-group mr-2" style="margin: 10px">
+            <div class="input-group input-group-sm" style="margin: 10px">
+                <label for="type_id" style="margin-right: 10px">Тип материала:</label>
+                <select name="type_id" id="type_id" class="form-control ml-2">
+                    <option value="all" {% if selected_type_id == 'all' %}selected{% endif %}>Все</option>
+                    {% for type in material_types %}
+                    <option value="{{ type.id }}" {% if selected_type_id == type.id|string %}selected{% endif %}>{{ type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group mr-2">
+                <input type="text" name="search_query" id="search_query" class="form-control form-control-sm" placeholder="Поиск по названию"
+                       value="{{ search_query }}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin: 10px">Найти</button>
         </div>
-        <div class="form-group mr-2">
-            <input type="text" name="search_query" id="search_query" class="form-control" placeholder="Поиск по названию"
-                   value="{{ search_query }}">
-        </div>
-        <button type="submit" class="btn btn-primary">Найти</button>
     </form>
 
     <!-- Таблица материалов -->
-    <table class="materials-table">
+    <table class="materials-table" style="margin: 10px">
         <thead>
             <tr>
                 <th>Название материала</th>
@@ -62,8 +65,10 @@
                 <td>{{ i.properties }}</td>
                 <td>{{ i.gost }}</td>
                 <td>
-                    <a href="/materials/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
-                    <a href="/materials/{{i.id}}/update" class="btn btn-success">Изменить</a>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Basic outlined example">
+                        <a href="/materials/{{i.id}}/delete" class="btn btn-warning">Удалить</a>
+                        <a href="/materials/{{i.id}}/update" class="btn btn-success">Изменить</a>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -103,10 +108,12 @@
                         <td>${material.properties}</td>
                         <td>${material.gost}</td>
                         <td>
-                            <a href="/materials/${material.id}/delete" class="btn btn-warning">Удалить</a>
-                            <a href="/materials/${material.id}/update" class="btn btn-success">Изменить</a>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Basic outlined example">
+                                <a href="/materials/${material.id}/delete" class="btn btn-warning">Удалить</a>
+                                <a href="/materials/${material.id}/update" class="btn btn-success">Изменить</a>
+                            </div>
                         </td>
-                    `;
+                        `;
                     tbody.appendChild(row);
                     });
                 });

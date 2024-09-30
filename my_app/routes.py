@@ -264,22 +264,47 @@ def delete_materials(materaial_id):
         return 'Ошибка при удалении'
 
 
-@app.route('/materials/<int:materaial_id>/update', methods=['GET', 'POST'])
+@app.route('/materials/<int:material_id>/update', methods=['GET', 'POST'])
 def materials_update(material_id):
-    materials = Materials.query.get_or_404(material_id)
+    material_form = MaterialForm()
+    material = Materials.query.get_or_404(material_id)
     if request.method == 'POST':
-        materials.name = request.form['name']
-        materials.prop_physics = request.form['NameP']
-        materials.structure = request.form['NameX']
-        materials.properties = request.form['NamePr']
-        materials.gost = request.form['NameGost']
         try:
-            db.session.commit()
-            return redirect('/materials')
-        except:
-            return 'Ошибка'
+            if material_form.submit.data and material_form.validate_on_submit():
+                if material_form.new_type.data:
+                    existing_type = MaterialType.query.filter_by(name=material_form.new_type.data).first()
+                    if existing_type:
+                        type_id = existing_type.id
+                    else:
+                        new_material_type = MaterialType(name=material_form.new_type.data)
+                        db.session.add(new_material_type)
+                        db.session.commit()
+                        type_id = new_material_type.id
+                else:
+                    type_id = material_form.type_id.data
 
-    return render_template('materials_update.html', materials=materials)
+                if type_id == 0:
+                    material_form.type_id.errors.append('Пожалуйста, выберите тип материала или добавьте новый.')
+                    return render_template('materials_update.html',
+                                           material=material,
+                                           material_form=material_form)
+
+                material.name = material_form.name.data
+                material.prop_physics = material_form.prop_physics.data
+                material.structure = material_form.structure.data
+                material.properties = material_form.properties.data
+                material.gost = material_form.gost.data
+                material.type_id = type_id
+
+                db.session.commit()
+                return redirect('/materials')
+        except Exception as e:
+            return f'Ошибка: {e}'
+
+    material_form.type_id.data = material.type_id
+    return render_template('materials_update.html',
+                           material=material,
+                           material_form=material_form)
 
 
 @app.route("/material/<int:materaial_id>/info")
@@ -307,24 +332,27 @@ def delete_coating(coating_id):
 
 @app.route('/coating/<int:coating_id>/update', methods=['GET', 'POST'])
 def coating_update(coating_id):
-    coatings = Coating.query.get(coating_id)
+    coating = Coating.query.get(coating_id)
+    coating_form = CoatingForm()
     if request.method == 'POST':
-        coatings.name = request.form['Name1']
-        coatings.material_coating = request.form['Name2']
-        coatings.type_application = request.form['Name3']
-        coatings.max_thickness = request.form['Name4']
-        coatings.nano_hardness = request.form['NameNano']
-        coatings.temperature_resistance = request.form['NameResistnce']
-        coatings.coefficient_friction = request.form['NameKoef']
-        coatings.color_coating = request.form['Color']
-
         try:
-            db.session.commit()
-            return redirect('/coatings')
-        except:
-            return 'Ошибка'
+            if coating_form.submit.data and coating_form.validate_on_submit():
+                coating.name = coating_form.name.data
+                coating.material_coating = coating_form.material_coating.data
+                coating.max_thickness = coating_form.max_thickness.data
+                coating.nanohardness = coating_form.nanohardness.data
+                coating.temperature_resistance = coating_form.temperature_resistance.data
+                coating.koefficient_friction = coating_form.koefficient_friction.data
+                coating.color_coating = coating_form.color_coating.data
 
-    return render_template('coating_update.html', coating=coatings)
+                db.session.commit()
+                return redirect('/coatings')
+            else:
+                return render_template('coating_update.html', coating=coating, coating_form=coating_form)
+        except Exception as e:
+            return f'Ошибка: {e}'
+
+    return render_template('coating_update.html', coating=coating, coating_form=coating_form)
 
 
 @app.route("/coating/<int:coating_id>/info")
