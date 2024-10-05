@@ -1,10 +1,11 @@
-from flask import render_template, request, redirect, jsonify
+from flask import render_template, request, redirect, jsonify, flash
 import sqlalchemy as sa
 
-from my_app.forms import MaterialForm, CoatingForm, MillingGeometryForm, TurningGeometryForm, DrillGeometryForm
+from my_app.forms import MaterialForm, CoatingForm, MillingGeometryForm, TurningGeometryForm, DrillGeometryForm, \
+    ExperimentForm
 from my_app import app, db
 from my_app.models import Materials, Tools, Coating, Experiments, RecommendationParameters, Adhesive, Coefficients, \
-    MaterialType, MillingGeometry, TurningGeometry, DrillGeometry
+    MaterialType, MillingGeometry, TurningGeometry, DrillGeometry, WearTables
 
 
 @app.route('/')
@@ -97,30 +98,32 @@ def add():
                 db.session.commit()
                 return redirect('/add')
 
-            if milling_geometry_form.submit.data and milling_geometry_form.validate_on_submit():
-                new_tool = Tools(
-                    name=milling_geometry_form.name.data,
-                    name_easy=milling_geometry_form.name_easy.data,
-                    tool_type=milling_geometry_form.tool_type,
-                    material_tool=milling_geometry_form.material_tool.data,
-                    is_indexable=milling_geometry_form.is_insert.data
-                )
-                new_milling_geometry = MillingGeometry(
-                    diameter=milling_geometry_form.diameter.data,
-                    number_teeth=milling_geometry_form.number_teeth.data,
-                    front_angle=milling_geometry_form.front_angle.data,
-                    spiral_angle=milling_geometry_form.spiral_angle.data,
-                    f_rear_angle=milling_geometry_form.f_rear_angle.data,
-                    s_rear_angle=milling_geometry_form.s_rear_angle.data,
-                    main_rear_angle=milling_geometry_form.main_rear_angle.data,
-                    angular_pitch=milling_geometry_form.angular_pitch.data
-                )
+            if milling_geometry_form.submit.data:
+                if milling_geometry_form.validate_on_submit():
+                    new_tool = Tools(
+                        name=milling_geometry_form.name.data,
+                        name_easy=milling_geometry_form.name_easy.data,
+                        tool_type=milling_geometry_form.tool_type,
+                        material_tool=milling_geometry_form.material_tool.data,
+                        is_indexable=milling_geometry_form.is_indexable.data
+                    )
+                    new_milling_geometry = MillingGeometry(
+                        type_milling=milling_geometry_form.type_milling.data,
+                        diameter=milling_geometry_form.diameter.data,
+                        diameter_shank=milling_geometry_form.diameter_shank.data,
+                        length=milling_geometry_form.length.data,
+                        length_work=milling_geometry_form.length_work.data,
+                        number_teeth=milling_geometry_form.number_teeth.data,
+                        spiral_angle=milling_geometry_form.spiral_angle.data,
+                        type_shank=milling_geometry_form.type_shank.data
+                    )
 
-                new_tool.milling_geometry = new_milling_geometry
-
-                db.session.add(new_tool)
-                db.session.commit()
-                return redirect('/add')
+                    new_tool.milling_geometry = new_milling_geometry
+                    db.session.add(new_tool)
+                    db.session.commit()
+                    return redirect('/add')
+                else:
+                    return 'Не пройдена валидация'
 
         except Exception as e:
             return f'Ошибка: {e}'
@@ -362,9 +365,33 @@ def coat_info(coating_id):
 
 
 @app.route('/tools')
-def tools_table():
-    tools = Tools.query.order_by(Tools.name).all()
-    return render_template('tools.html', tools=tools)
+def tools():
+    # Получаем параметры запроса
+    tool_type = request.args.get('tool_type', 'all')
+    search_query = request.args.get('search_query', '')
+
+    # Базовый запрос
+    query = Tools.query
+
+    # Фильтрация по типу инструмента
+    if tool_type != 'all':
+        query = query.filter(Tools.tool_type == tool_type)
+
+    # Поиск по названию
+    if search_query:
+        query = query.filter(Tools.name.ilike(f'%{search_query}%'))
+
+    # Оптимизация запроса с подгрузкой связанных геометрий
+    query = query.options(
+        db.joinedload(Tools.milling_geometry),
+        db.joinedload(Tools.turning_geometry),
+        db.joinedload(Tools.drill_geometry)
+    )
+
+    # Загружаем все инструменты
+    tools = query.all()
+
+    return render_template('tools.html', tools=tools, selected_tool_type=tool_type, search_query=search_query)
 
 
 @app.route('/tool/<int:tool_id>/delete')
@@ -452,6 +479,46 @@ def experiments_table():
                            sort_by=sort_by,
                            order=order,
                            request_args=request.args)
+
+
+@app.route('/experiment/add', methods=['GET', 'POST'])
+def add_experiment():
+    form = ExperimentForm()
+    if request.method == 'POST':
+        total_enries = len([key for key in request.form.keys() if 'wear_data-' in key and '-length' in key])
+        form.wear_data.min_entries = total_enries
+        form = ExperimentForm(request.form)
+
+        if form.validate():
+            new_experiment = Experiments(
+                material_id=form.material_id.data,
+                tool_id=form.tool_id.data,
+                coating_id=form.coating_id.data,
+                spindle_speed=form.spindle_speed.data,
+                feed_table=form.feed_table.data,
+                depth_cut=form.depth_cut.data,
+                width_cut=form.width_cut.data,
+                length_path=form.length_path.data,
+                durability=form.durability.data,
+                data_experiment=form.date_conducted.data
+            )
+            db.session.add(new_experiment)
+            db.session.flush()
+            for wear_form in form.wear_data.entries:
+                wear_entry = WearTables(
+                    experiment_id=new_experiment.id,
+                    length=wear_form.form.length.data,
+                    wear=wear_form.form.wear.data
+                )
+                db.session.add(wear_entry)
+            db.session.commit()
+
+            flash(f'Добавлен новый эксперимент: Номер - {new_experiment.id}', 'success')
+        else:
+            print(form.errors)
+    return render_template('add_experiment.html', form=form)
+
+
 
 
 @app.route("/experiments/<int:experiment_id>/info")

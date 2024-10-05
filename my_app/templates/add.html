@@ -166,6 +166,10 @@
                 <form method="POST">
                     {{ milling_geometry_form.hidden_tag() }}
                     <div class="form-group">
+                        {{ milling_geometry_form.type_milling.label }}
+                        {{ milling_geometry_form.type_milling(class="form-control", placeholder="Например: Фреза концевая") }}
+                    </div>
+                    <div class="form-group">
                         {{ milling_geometry_form.name.label }}
                         {{ milling_geometry_form.name(class="form-control", placeholder="Например: Фреза 6157-7005") }}
                     </div>
@@ -178,8 +182,8 @@
                         {{ milling_geometry_form.material_tool(class="form-control", placeholder="Например: ВК10-ОМ") }}
                     </div>
                     <div class="form-group">
-                        {{ milling_geometry_form.is_insert.label }}
-                        {{ milling_geometry_form.is_insert(class="custom-checkbox") }}
+                        {{ milling_geometry_form.is_indexable.label }}
+                        {{ milling_geometry_form.is_indexable(class="custom-checkbox") }}
                     </div>
                     <div class="form-group">
                         {{ milling_geometry_form.insert.label }}
@@ -190,34 +194,30 @@
                         {{ milling_geometry_form.diameter(class="form-control", placeholder="Например: 12") }}
                     </div>
                     <div class="form-group">
+                        {{ milling_geometry_form.type_shank.label }}
+                        {{ milling_geometry_form.type_shank(class="form-control", placeholder="Например: 12") }}
+                    </div>
+                    <div class="form-group">
+                        {{ milling_geometry_form.diameter_shank.label }}
+                        {{ milling_geometry_form.diameter_shank(class="form-control", placeholder="Например: 12") }}
+                    </div>
+                    <div class="form-group">
                         {{ milling_geometry_form.number_teeth.label }}
                         {{ milling_geometry_form.number_teeth(class="form-control", placeholder="Например: 4") }}
                     </div>
                     <div class="form-group">
-                        {{ milling_geometry_form.front_angle.label }}
-                        {{ milling_geometry_form.front_angle(class="form-control", placeholder="Например: 12") }}
+                        {{ milling_geometry_form.length.label }}
+                        {{ milling_geometry_form.length(class="form-control", placeholder="Например: 12") }}
+                    </div>
+                    <div class="form-group">
+                        {{ milling_geometry_form.length_work.label }}
+                        {{ milling_geometry_form.length_work(class="form-control", placeholder="Например: 12") }}
                     </div>
                     <div class="form-group">
                         {{ milling_geometry_form.spiral_angle.label }}
                         {{ milling_geometry_form.spiral_angle(class="form-control", placeholder="Например: 10") }}
                     </div>
-                    <div class="form-group">
-                        {{ milling_geometry_form.f_rear_angle.label }}
-                        {{ milling_geometry_form.f_rear_angle(class="form-control", placeholder="Например: 4") }}
-                    </div>
-                    <div class="form-group">
-                        {{ milling_geometry_form.s_rear_angle.label }}
-                        {{ milling_geometry_form.s_rear_angle(class="form-control", placeholder="Например: 12") }}
-                    </div>
-                    <div class="form-group">
-                        {{ milling_geometry_form.main_rear_angle.label }}
-                        {{ milling_geometry_form.main_rear_angle(class="form-control", placeholder="Например: 5") }}
-                    </div>
-                    <div class="form-group">
-                        {{ milling_geometry_form.angular_pitch.label }}
-                        {{ milling_geometry_form.angular_pitch(class="form-control", placeholder="Например: 23") }}
-                    </div>
-                    <hr width="100%" , color='blue' , size='20px'/>
+                    <hr width="100%", color='blue', size='20px'/>
                     <div class="form-group">
                         {{ milling_geometry_form.submit(class="btn btn-success", value="Добавить инструмент") }}
                     </div>

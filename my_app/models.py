@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 from my_app import db
 import math
+from datetime import datetime
 
 
 class Materials(db.Model):
@@ -27,14 +28,14 @@ class Tools(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(sa.String(64), index=True, unique=True)
     name_easy = db.Column(sa.String(64), default='')
-    tool_type = db.Column(sa.String(64))  # 'milling', 'turning', 'drill',
+    tool_type = db.Column(sa.String(64))  # 'milling', 'turning', 'drill', 'drill_center'
     material_tool = db.Column(sa.String(64))
     is_indexable = db.Column(sa.Boolean, default=False)
 
     milling_geometry = db.relationship('MillingGeometry', back_populates='tool', uselist=False)
     turning_geometry = db.relationship('TurningGeometry', back_populates='tool', uselist=False)
     drill_geometry = db.relationship('DrillGeometry', back_populates='tool', uselist=False)
-    inserts = db.relationship('Insert', back_populates='tool')
+    insert = db.relationship('Insert', back_populates='tool')
 
     experiments = db.relationship('Experiments', back_populates='tool')
     recommendations = db.relationship('RecommendationParameters', back_populates='tool')
@@ -49,14 +50,14 @@ class MillingGeometry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tool_id = db.Column(db.Integer, db.ForeignKey('tools.id'), unique=True, nullable=False)
 
+    type_milling = db.Column(sa.String(64))
     diameter = db.Column(sa.Float)
+    diameter_shank = db.Column(sa.Float)
+    length = db.Column(sa.Float)
+    length_work = db.Column(sa.Float)
     number_teeth = db.Column(sa.Integer)
-    front_angle = db.Column(sa.Float)
+    type_shank = db.Column(sa.String(64))  # cylindrical, weldone
     spiral_angle = db.Column(sa.Float)
-    f_rear_angle = db.Column(sa.Float)
-    s_rear_angle = db.Column(sa.Float)
-    main_rear_angle = db.Column(sa.Float)
-    angular_pitch = db.Column(sa.String(32))
 
     tool = db.relationship('Tools', back_populates='milling_geometry')
 
@@ -103,7 +104,7 @@ class Insert(db.Model):
     name = db.Column(sa.String(64))
     material = db.Column(sa.String(64))
 
-    tool = db.relationship('Tools', back_populates='inserts')
+    tool = db.relationship('Tools', back_populates='insert')
 
     def __repr__(self):
         return f'<Insert {self.id} for Tool {self.tool.name}>'
@@ -139,6 +140,25 @@ class CsvFiles(db.Model):
     experiment = db.relationship('Experiments', back_populates='csv_file', uselist=False)
 
 
+class WearTables(db.Model):
+    __tablename__ = 'wear_tables'
+
+    id = db.Column(db.Integer, primary_key=True)
+    experiment_id = db.Column(db.Integer, db.ForeignKey('experiments.id'), nullable=False)
+    length = db.Column(db.Float)
+    wear = db.Column(db.Float)
+
+    experiment = db.relationship('Experiments', back_populates='wear_tables')
+
+    __table_args__ = (
+        sa.UniqueConstraint('experiment_id', 'length', 'wear', name='unique_wear_table'),
+    )
+
+    @property
+    def time_(self):
+        return self.length / self.experiment.feed_table
+
+
 class Experiments(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     material_id = db.Column(db.Integer, db.ForeignKey('materials.id'))
@@ -151,11 +171,14 @@ class Experiments(db.Model):
     length_path = db.Column(db.Float)
     durability = db.Column(db.Float)
     csv_id = db.Column(db.Integer, db.ForeignKey(CsvFiles.id))
+    data_experiment = db.Column(db.Date)
+    date_recording = db.Column(db.DateTime, default=datetime.utcnow)
 
     tool = db.relationship('Tools', foreign_keys=[tool_id], back_populates='experiments')
     coating = db.relationship('Coating', foreign_keys=[coating_id], back_populates='experiments')
     material = db.relationship('Materials', foreign_keys=[material_id], back_populates='experiments')
     csv_file = db.relationship('CsvFiles', foreign_keys=[csv_id], back_populates='experiment', uselist=False)
+    wear_tables = db.relationship('WearTables', back_populates='experiment')
 
     @property
     def cutter_speed(self):
