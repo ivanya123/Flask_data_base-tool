@@ -9,6 +9,6 @@ class Config:
 
 class TestConfig(Config):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + r'C:\Users\aples\PycharmProjects\Flask_data_base-tool\me_app_test.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'me_app_test.db')
     TESTING = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
