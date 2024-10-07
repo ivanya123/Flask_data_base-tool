@@ -33,8 +33,8 @@
         <br>
         <!-- Остальные поля в формате "Название поля: поле ввода" -->
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.spindle_speed.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.spindle_speed.label }}</label>
+            <div class="col-sm-9">
                 {{ form.spindle_speed(class="form-control") }}
                 {% for error in form.spindle_speed.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -43,8 +43,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.feed_table.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.feed_table.label }}</label>
+            <div class="col-sm-9">
                 {{ form.feed_table(class="form-control") }}
                 {% for error in form.feed_table.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -53,8 +53,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.depth_cut.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.depth_cut.label }}</label>
+            <div class="col-sm-9">
                 {{ form.depth_cut(class="form-control") }}
                 {% for error in form.depth_cut.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -63,8 +63,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.width_cut.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.width_cut.label }}</label>
+            <div class="col-sm-9">
                 {{ form.width_cut(class="form-control") }}
                 {% for error in form.width_cut.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -73,8 +73,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.length_path.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.length_path.label }}</label>
+            <div class="col-sm-9">
                 {{ form.length_path(class="form-control") }}
                 {% for error in form.length_path.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -83,8 +83,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.durability.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.durability.label }}</label>
+            <div class="col-sm-9">
                 {{ form.durability(class="form-control") }}
                 {% for error in form.durability.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -93,8 +93,8 @@
         </div>
 
         <div class="form-group row">
-            <label class="col-sm-2 col-form-label">{{ form.date_conducted.label }}</label>
-            <div class="col-sm-10">
+            <label class="col-sm-3 col-form-label">{{ form.date_conducted.label }}</label>
+            <div class="col-sm-9">
                 {{ form.date_conducted(class="form-control") }}
                 {% for error in form.date_conducted.errors %}
                     <span class="text-danger">{{ error }}</span>
@@ -136,7 +136,7 @@
                 {% endfor %}
             </tbody>
         </table>
-        <button type="button" class="btn btn-secondary" id="add-wear-entry">Добавить запись износа</button>
+        <button type="button" class="btn btn-secondary" id="add-wear-entry">Добавить точку измерения износа</button>
 
         <!-- Кнопка отправки формы -->
         <div class="form-group mt-3">

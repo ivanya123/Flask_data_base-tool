@@ -102,27 +102,27 @@ class DrillGeometryForm(FlaskForm):
 
 
 class WearForm(Form):
-    length = FloatField('Пройденный путь', validators=[DataRequired(), NumberRange(min=0)])
-    wear = FloatField('Износ', validators=[DataRequired(), NumberRange(min=0)])
+    length = FloatField('Пройденный путь (мм)', validators=[DataRequired(), NumberRange(min=0)])
+    wear = FloatField('Износ (мм)', validators=[DataRequired(), NumberRange(min=0)])
 
 
 class ExperimentForm(FlaskForm):
     material_id = SelectField('Материал', coerce=int, validators=[DataRequired()])
     tool_id = SelectField('Инструмент', coerce=int, validators=[DataRequired()])
     coating_id = SelectField('Покрытие', coerce=int, validators=[DataRequired()])
-    spindle_speed = FloatField('Скорость шпинделя', validators=[DataRequired()])
-    feed_table = FloatField('Подача стола', validators=[DataRequired()])
-    depth_cut = FloatField('Глубина резания', validators=[DataRequired()])
-    width_cut = FloatField('Ширина резания', validators=[DataRequired()])
-    length_path = FloatField('Длина пути', validators=[DataRequired()])
-    durability = FloatField('Долговечность', validators=[DataRequired()])
+    spindle_speed = FloatField('Часстота обороротов шпинделя (об/мин)', validators=[DataRequired()])
+    feed_table = FloatField('Подача стола (мм/мин)', validators=[DataRequired()])
+    depth_cut = FloatField('Глубина фрезерования (мм)', validators=[DataRequired()])
+    width_cut = FloatField('Ширина фрезерования (мм)', validators=[DataRequired()])
+    length_path = FloatField('Длина пути резания (мм)', validators=[DataRequired()])
+    durability = FloatField('Стойкость инструмента (мин)', validators=[DataRequired()])
     date_conducted = DateField(
         'Дата проведения эксперимента',
         default=date.today,
         format='%Y-%m-%d',
         validators=[DataRequired()]
     )
-    wear_data = FieldList(FormField(WearForm), label='Данные износа')
+    wear_data = FieldList(FormField(WearForm), label='Точки измерения износа')
 
     submit = SubmitField('Добавить эксперимент')
 

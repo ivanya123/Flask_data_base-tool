@@ -6,25 +6,25 @@ import numpy as np
 def create_dash(flask_app):
     dash_app = Dash(server=flask_app, url_base_pathname='/dash/')
 
-    dash_app.layout = html.Div(className='container', children=[
-        html.H1('Параметры резания', className='mt-4'),
+    dash_app.layout = html.Div(className='container-mt-5', children=[
+        html.H1('Параметры резания'),
 
         # Отображение результатов расчёта
-        html.Div(className='results-container', children=[
-            html.Div(className='result-block', children=[
-                html.Span('Сила резания: ', className='result'),
+        html.Div(className='row', children=[
+            html.Div(className='col', children=[
+                html.Span('Сила резания: '),
                 html.Span(id='cutting_force', children='-')
             ]),
-            html.Div(className='result-block', children=[
-                html.Span('Температура резания: ', className='result'),
+            html.Div(className='col', children=[
+                html.Span('Температура резания: '),
                 html.Span(id='cutting_temperature', children='-')
             ]),
-            html.Div(className='result-block', children=[
-                html.Span('Стойкость инструмента: ', className='result'),
+            html.Div(className='col', children=[
+                html.Span('Стойкость инструмента: '),
                 html.Span(id='tool_life', children='-')
             ]),
-            html.Div(className='result-block', children=[
-                html.Span('Пройденный путь: ', className='result'),
+            html.Div(className='col', children=[
+                html.Span('Пройденный путь: '),
                 html.Span(id='length_processing', children='-')
             ])
         ]),
@@ -61,6 +61,7 @@ def create_dash(flask_app):
                             marks={i: str(i) for i in range(10, 201, 20)},
                             className='form-range'
                         ),
+                        html.Br(),
                         html.Div(children=[
                             html.Div('Введите скорость резания(м/мин): ', style={'display': 'inline'}),
                             dcc.Input(id='input_speed', type='number', size='5', min=0, max=200, value=75),
@@ -91,6 +92,7 @@ def create_dash(flask_app):
                             marks={round(i, 3): str(round(i, 3)) for i in [0.001, 0.1, 0.2, 0.3, 0.4, 0.5]},
                             className='form-range'
                         ),
+                        html.Br(),
                         html.Div(children=[
                             html.Div('Введите подачу на зуб(S): ', style={'display': 'inline'}),
                             dcc.Input(id='input_supply', type='number', size='5', min=0, max=0.5, value=0.025,
