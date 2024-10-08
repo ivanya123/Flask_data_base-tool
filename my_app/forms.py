@@ -71,7 +71,7 @@ class TurningGeometryForm(FlaskForm):
     name = StringField('Введите код инструмента', validators=[DataRequired()])
     material_tool = StringField('Материал инструмента')
     name_easy = StringField('Название инструмента', validators=[DataRequired()])
-    is_insert = BooleanField('Составной инструмент(с пластинами)',
+    is_indexable = BooleanField('Составной инструмент(с пластинами)',
                              default=True, false_values=None)
     insert = StringField('Название пластины', validators=[DataRequired()])
     turning_type = StringField('Тип токарного инструмента', validators=[DataRequired()])
@@ -88,7 +88,7 @@ class DrillGeometryForm(FlaskForm):
     name = StringField('Введите код инструмента', validators=[DataRequired()])
     material_tool = StringField('Материал инструмента')
     name_easy = StringField('Название инструмента', validators=[DataRequired()])
-    is_insert = BooleanField('Составной инструмент(с пластинами)',
+    is_indexable = BooleanField('Составной инструмент(с пластинами)',
                              default=True, false_values=None)
     insert = StringField('Название пластины', validators=[DataRequired()])
     drill_type = StringField('Тип сверла', validators=[DataRequired()])

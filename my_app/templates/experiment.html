@@ -54,8 +54,8 @@
         <tbody>
             {% for i in experiment %}
             <tr>
-                <td><a href="/material/{{i.material.id}}/info">{{ i.material.name }}</a></td>
-                <td>{{ i.tool.name }}</td>
+                <td><a href="/material/{{i.material_id}}/info">{{ i.material.name }}</a></td>
+                <td><a href="/tool/{{i.tool_id}}/info">{{ i.tool.name }}</a></td>
                 <td>{{ i.coating.name }}</td>
                 <td>{{ i.spindle_speed | int }}</td>
                 <td>{{ i.feed_table | int }}</td>
@@ -71,6 +71,9 @@
             {% endfor %}
         </tbody>
     </table>
+    <div id="dash-container" style="height: 100vh;">
+            <iframe src="/dash_wear/" width="100%" height="100%" frameborder="0"></iframe>
+    </div>
 </div>
 {% endblock %}
 

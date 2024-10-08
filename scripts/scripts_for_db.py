@@ -101,6 +101,4 @@ from sqlalchemy import text
 # finally:
 #     db.session.close()
 
-materials = Materials.query.all()
-for material in materials:
-    print(material.name, '-', material.type_id)
+

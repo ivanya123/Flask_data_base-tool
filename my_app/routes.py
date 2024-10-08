@@ -1,11 +1,12 @@
-from flask import render_template, request, redirect, jsonify, flash
 import sqlalchemy as sa
+from flask import render_template, request, redirect, jsonify, flash, url_for
+from sqlalchemy.orm import joinedload
 
-from my_app.forms import MaterialForm, CoatingForm, MillingGeometryForm, TurningGeometryForm, DrillGeometryForm, \
-    ExperimentForm
 from my_app import app, db
+from my_app.forms import MaterialForm, CoatingForm, MillingGeometryForm, TurningGeometryForm, DrillGeometryForm, \
+    ExperimentForm, ToolForm
 from my_app.models import Materials, Tools, Coating, Experiments, RecommendationParameters, Adhesive, Coefficients, \
-    MaterialType, MillingGeometry, TurningGeometry, DrillGeometry, WearTables
+    MaterialType, MillingGeometry, WearTables, DrillGeometry, TurningGeometry
 
 
 @app.route('/')
@@ -310,10 +311,10 @@ def materials_update(material_id):
                            material_form=material_form)
 
 
-@app.route("/material/<int:materaial_id>/info")
+@app.route("/material/<int:material_id>/info")
 def mat_info(material_id):
     material = Materials.query.get_or_404(material_id)
-    return render_template('material.html', material=material)
+    return render_template('mat_info.html', material=material)
 
 
 @app.route('/coatings')
@@ -414,19 +415,102 @@ def delete_tool(tool_id):
 
 @app.route('/tool/<int:tool_id>/update', methods=['GET', 'POST'])
 def tool_update(tool_id):
-    tool = Tools.query.get(tool_id)
-    if request.method == 'POST':
-        tool.name = request.form['Name5']
-        tool.material_tool = request.form['Name6']
-        tool.number_teeth = request.form['Name8']
-        tool.diameter = request.form['Name9']
+    tool = Tools.query.get_or_404(tool_id)
+
+    # Определяем, какую форму использовать в зависимости от типа инструмента
+    if tool.tool_type == 'milling':
+        form = MillingGeometryForm()
+    elif tool.tool_type == 'turning':
+        form = TurningGeometryForm()
+    elif tool.tool_type == 'drilling':
+        form = DrillGeometryForm()
+    else:
+        form = ToolForm()
+
+    if request.method == 'GET':
+        # Предзаполняем форму данными инструмента
+        form.name.data = tool.name
+        form.material_tool.data = tool.material_tool
+        form.name_easy.data = tool.name_easy
+        form.is_indexable.data = tool.is_indexable  # Убедитесь, что поле называется `is_insert` или `is_indexable`
+
+        # Предзаполняем данные геометрии инструмента
+        if tool.tool_type == 'milling' and tool.milling_geometry:
+            form.type_milling.data = tool.milling_geometry.type_milling
+            form.diameter.data = tool.milling_geometry.diameter
+            form.diameter_shank.data = tool.milling_geometry.diameter_shank
+            form.length.data = tool.milling_geometry.length
+            form.length_work.data = tool.milling_geometry.length_work
+            form.number_teeth.data = tool.milling_geometry.number_teeth
+            form.type_shank.data = tool.milling_geometry.type_shank
+            form.spiral_angle.data = tool.milling_geometry.spiral_angle
+        elif tool.tool_type == 'turning' and tool.turning_geometry:
+            form.turning_type.data = tool.turning_geometry.turning_type
+            form.front_angle.data = tool.turning_geometry.front_angle
+            form.main_rear_angle.data = tool.turning_geometry.main_rear_angle
+            form.sharpening_angle.data = tool.turning_geometry.sharpening_angle
+            form.cutting_angle.data = tool.turning_geometry.cutting_angle
+            form.aux_rear_angle.data = tool.turning_geometry.aux_rear_angle
+        elif tool.tool_type == 'drilling' and tool.drill_geometry:
+            form.drill_type.data = tool.drill_geometry.drill_type
+            form.diameter.data = tool.drill_geometry.diameter
+            form.screw_angle.data = tool.drill_geometry.screw_angle
+            form.top_angle.data = tool.drill_geometry.top_angle
+            form.front_angle.data = tool.drill_geometry.front_angle
+            form.rear_angle.data = tool.drill_geometry.rear_angle
+            form.transverse_edge_angle.data = tool.drill_geometry.transverse_edge_angle
+
+    elif form.validate_on_submit():
+        # Обновляем основные поля инструмента
+        tool.name = form.name.data
+        tool.material_tool = form.material_tool.data
+        tool.name_easy = form.name_easy.data
+        tool.is_indexable = form.is_indexable.data  # Убедитесь, что поле называется правильно
+
+        # Обновляем данные геометрии инструмента
+        if tool.tool_type == 'milling':
+            if not tool.milling_geometry:
+                tool.milling_geometry = MillingGeometry()
+            tool.milling_geometry.type_milling = form.type_milling.data
+            tool.milling_geometry.diameter = form.diameter.data
+            tool.milling_geometry.diameter_shank = form.diameter_shank.data
+            tool.milling_geometry.length = form.length.data
+            tool.milling_geometry.length_work = form.length_work.data
+            tool.milling_geometry.number_teeth = form.number_teeth.data
+            tool.milling_geometry.type_shank = form.type_shank.data
+            tool.milling_geometry.spiral_angle = form.spiral_angle.data
+        elif tool.tool_type == 'turning':
+            if not tool.turning_geometry:
+                tool.turning_geometry = TurningGeometry()
+            tool.turning_geometry.turning_type = form.turning_type.data
+            tool.turning_geometry.front_angle = form.front_angle.data
+            tool.turning_geometry.main_rear_angle = form.main_rear_angle.data
+            tool.turning_geometry.sharpening_angle = form.sharpening_angle.data
+            tool.turning_geometry.cutting_angle = form.cutting_angle.data
+            tool.turning_geometry.aux_rear_angle = form.aux_rear_angle.data
+        elif tool.tool_type == 'drilling':
+            if not tool.drill_geometry:
+                tool.drill_geometry = DrillGeometry()
+            tool.drill_geometry.drill_type = form.drill_type.data
+            tool.drill_geometry.diameter = form.diameter.data
+            tool.drill_geometry.screw_angle = form.screw_angle.data
+            tool.drill_geometry.top_angle = form.top_angle.data
+            tool.drill_geometry.front_angle = form.front_angle.data
+            tool.drill_geometry.rear_angle = form.rear_angle.data
+            tool.drill_geometry.transverse_edge_angle = form.transverse_edge_angle.data
+
         try:
             db.session.commit()
-            return redirect('/tools')
-        except:
-            return 'Ошибка'
+            flash('Инструмент успешно обновлен!', 'success')
+            return redirect(url_for('tools_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ошибка при обновлении инструмента: {e}', 'danger')
+    else:
+        if request.method == 'POST':
+            flash('Пожалуйста, исправьте ошибки в форме.', 'danger')
 
-    return render_template('tool_update.html', tool=tool)
+    return render_template('tool_update.html', form=form, tool=tool)
 
 
 @app.route("/tool/<int:tool_id>/info")
@@ -446,13 +530,18 @@ def experiments_table():
     sort_by = request.args.get('sort_by')
     order = request.args.get('order', 'asc')
 
-    experiments_query = Experiments.query
+    experiments_query = Experiments.query.options(joinedload(Experiments.material), joinedload(Experiments.coating),
+                                                  joinedload(Experiments.tool))
 
     if material_filter:
-        experiments_query = experiments_query.filter(Experiments.material.ilike(f'%{material_filter}%'))
+        experiments_query = experiments_query.join(Experiments.material).filter(
+            Materials.name.ilike(f'%{material_filter}%')
+        )
 
     if coating_filter:
-        experiments_query = experiments_query.filter(Experiments.coating.ilike(f'%{coating_filter}%'))
+        experiments_query = experiments_query.join(Experiments.coating).filter(
+            Experiments.coating.name.ilike(f'%{coating_filter}%')
+        )
 
     if spindle_min:
         experiments_query = experiments_query.filter(Experiments.spindle_speed >= spindle_min)
@@ -517,8 +606,6 @@ def add_experiment():
         else:
             print(form.errors)
     return render_template('add_experiment.html', form=form)
-
-
 
 
 @app.route("/experiments/<int:experiment_id>/info")
