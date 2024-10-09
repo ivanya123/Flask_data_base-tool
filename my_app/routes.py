@@ -20,28 +20,36 @@ def select_parameters():
 
 
 @app.route('/recommended_speed', methods=['POST', 'GET'])
-def recomended_speeds():
-    if request.method == 'POST':
-        print(request.form)
-        material = int(request.form['material'])
-        tool = int(request.form['tool'])
-        coating = int(request.form['coating']) if request.form['coating'] != 'None' else "None"
-        filters = {
-            'material_id': material,
-            'tool_id': tool,
-        }
-        if coating != 'None':
-            filters['coating_id'] = coating
+def recommended_speed():
+    # Получаем значения фильтров из параметров запроса
+    material_id = request.args.get('material_id', type=int)
+    coating_id = request.args.get('coating_id', type=int)
+    tool_id = request.args.get('tool_id', type=int)
 
-        recommendation_parameters = RecommendationParameters.query.filter_by(
-            **filters
-        ).order_by(
-            sa.desc(RecommendationParameters.durability)).all()
+    # Получаем списки для выпадающих списков
+    materials = Materials.query.join(RecommendationParameters).distinct().all()
+    coatings = Tools.query.join(RecommendationParameters).distinct().all()
+    tools = Coating.query.join(RecommendationParameters).distinct().all()
 
-    else:
-        recommendation_parameters = RecommendationParameters.query.all()
+    # Формируем запрос с учетом фильтров
+    query = RecommendationParameters.query
+    if material_id:
+        query = query.filter_by(material_id=material_id)
+    if coating_id:
+        query = query.filter_by(coating_id=coating_id)
+    if tool_id:
+        query = query.filter_by(tool_id=tool_id)
 
-    return render_template('recomended_speed.html', recomended_speed=recommendation_parameters)
+    recomended_speed = query.all()
+
+    return render_template('recommend_speed.html',
+                           recomended_speed=recomended_speed,
+                           materials=materials,
+                           coatings=coatings,
+                           tools=tools,
+                           selected_material_id=material_id,
+                           selected_coating_id=coating_id,
+                           selected_tool_id=tool_id)
 
 
 @app.route('/add', methods=['POST', 'GET'])
@@ -318,9 +326,14 @@ def mat_info(material_id):
 
 
 @app.route('/coatings')
-def caotings():
-    coatings = Coating.query.order_by(Coating.name).all()
-    return render_template('coating.html', coatings=coatings)
+def coatings():
+    search_query = request.args.get('search_query', '')
+    coatings = Coating.query.order_by(Coating.name)
+    if search_query:
+        coatings = [coating for coating in coatings.all() if search_query.lower() in coating.name.lower()]
+    else:
+        coatings = coatings.all()
+    return render_template('coating.html', coatings=coatings, search_query=search_query)
 
 
 @app.route('/coating/<int:coating_id>/delete')
@@ -653,8 +666,8 @@ def update_graph_data():
     coating_id = data.get('coating_id')
 
     tool = Tools.query.get(tool_id)
-    diameter = tool.milling_geometry.diameter
-    count_of_teeth = tool.milling_geometry.number_teeth
+    diameter = tool.milling_geometry.diameter if tool.milling_geometry else None
+    count_of_teeth = tool.milling_geometry.number_teeth if tool.milling_geometry else None
 
     coefficient = Coefficients.query.filter_by(
         material_id=material_id,
@@ -671,13 +684,30 @@ def update_graph_data():
             'durability_coefficient': coefficient.durability_coefficient,
             'diameter': diameter,
             'teeth_count': count_of_teeth,
+            'coating_id': coating_id,
+            'material_id': material_id,
+            'tool_id': tool_id
         }
 
-    return jsonify({'status': 'success'})
+    # Получаем рекомендуемые режимы резания
+    recommended = RecommendationParameters.query.filter_by(
+        material_id=material_id,
+        tool_id=tool_id,
+        coating_id=coating_id
+    ).first()
+
+    if recommended:
+        recommended_data = {
+            'spindle_speed': recommended.spindle_speed,
+            'feed_rate': recommended.feed_table,
+            'roughness': recommended.roughness,
+            'hardening': round(recommended.hardening, 2),
+            'micro_hardness': recommended.micro_hardness,
+            'durability': recommended.durability
+        }
+    else:
+        recommended_data = None
+
+    return jsonify({'status': 'success', 'recommended_data': recommended_data})
 
 
-@app.route('/update_dash_values', methods=['GET', 'POST'])
-def update_dash_values():
-    # Получаем значения слайдеров от Dash
-    dash_values = app.config.get('DASH_SLIDER_VALUES', {})
-    return jsonify(dash_values)

@@ -96,78 +96,109 @@
                 {% endfor %}
             </select>
         </div>
+        <div id="recommended-parameters">
+
+        </div>
         <div id="dash-container" style="height: 100vh;">
             <iframe src="/dash/" width="100%" height="100%" frameborder="0"></iframe>
         </div>
     </form>
 <script>
-    <!-- Отображение результатов расчета -->
-        document.addEventListener('DOMContentLoaded', function() {
-    var materialTypeSelect = document.getElementById('material_type');
-    var materialSelect = document.getElementById('material');
-    var toolSelect = document.getElementById('tool');
-    var coatingSelect = document.getElementById('coating');
+    document.addEventListener('DOMContentLoaded', function() {
+        var materialTypeSelect = document.getElementById('material_type');
+        var materialSelect = document.getElementById('material');
+        var toolSelect = document.getElementById('tool');
+        var coatingSelect = document.getElementById('coating');
 
-    // Обработчик изменения типа материала
-    materialTypeSelect.addEventListener('change', function() {
-        updateMaterialOptions();
-    });
+        // Обработчик изменения типа материала
+        materialTypeSelect.addEventListener('change', function() {
+            updateMaterialOptions();
+        });
 
-    // Обработчики изменений для всех элементов формы
-    materialSelect.addEventListener('change', updateCoefficients);
-    toolSelect.addEventListener('change', updateCoefficients);
-    coatingSelect.addEventListener('change', updateCoefficients);
+        // Обработчики изменений для всех элементов формы
+        materialSelect.addEventListener('change', updateCoefficients);
+        toolSelect.addEventListener('change', updateCoefficients);
+        coatingSelect.addEventListener('change', updateCoefficients);
 
-    function updateMaterialOptions() {
-        var typeId = materialTypeSelect.value;
+        function updateMaterialOptions() {
+            var typeId = materialTypeSelect.value;
 
-        if (typeId) {
-            fetch(`/materials/by_type/${typeId}`)
+            if (typeId) {
+                fetch(`/materials/by_type/${typeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        materialSelect.innerHTML = '<option value="">Выберите материал</option>';
+                        data.forEach(material => {
+                            var option = document.createElement('option');
+                            option.value = material.id;
+                            option.textContent = material.name;
+                            materialSelect.appendChild(option);
+                        });
+                        materialSelect.disabled = false;
+                    });
+            } else {
+                materialSelect.innerHTML = '<option value="">Сначала выберите тип материала</option>';
+                materialSelect.disabled = true;
+            }
+
+            updateCoefficients(); // Обновляем коэффициенты при изменении типа материала
+        }
+
+        function updateCoefficients() {
+            var materialId = materialSelect.value;
+            var toolId = toolSelect.value;
+            var coatingId = coatingSelect.value;
+
+            if (materialId && toolId && coatingId) {
+                fetch(`/update_graph_data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        material_id: materialId,
+                        tool_id: toolId,
+                        coating_id: coatingId
+                    })
+                })
                 .then(response => response.json())
                 .then(data => {
-                    materialSelect.innerHTML = '<option value="">Выберите материал</option>';
-                    data.forEach(material => {
-                        var option = document.createElement('option');
-                        option.value = material.id;
-                        option.textContent = material.name;
-                        materialSelect.appendChild(option);
-                    });
-                    materialSelect.disabled = false;
+                    if (data.status === 'success') {
+                        var iframe = document.querySelector('#dash-container iframe');
+                        iframe.contentWindow.location.reload(); // Перезагрузка iframe для обновления графика и результатов
+
+                        // Обновляем отображение рекомендуемых параметров
+                        var recommendedData = data.recommended_data;
+                        var recommendedDiv = document.getElementById('recommended-parameters');
+                        if (recommendedData) {
+                            // Создаем HTML для отображения рекомендуемых параметров
+                            var html = '<h3>Рекомендуемые режимы резания</h3>';
+                            html += '<table class="table table-bordered"><tbody>';
+                            html += '<tr><th>Обороты шпинделя, об/мин</th><td>' + recommendedData.spindle_speed + '</td></tr>';
+                            html += '<tr><th>Подача, мм/мин</th><td>' + recommendedData.feed_rate + '</td></tr>';
+                            html += '<tr><th>Шероховатость, Ra</th><td>' + recommendedData.roughness + '</td></tr>';
+                            html += '<tr><th>Наклеп, мм</th><td>' + recommendedData.hardening + '</td></tr>';
+                            html += '<tr><th>Микротвердость, HB</th><td>' + recommendedData.micro_hardness + '</td></tr>';
+                            html += '<tr><th>Стойкость, мин</th><td>' + recommendedData.durability + '</td></tr>';
+                            html += '</tbody></table>';
+                            recommendedDiv.innerHTML = html;
+                        } else {
+                            recommendedDiv.innerHTML = '<p>Рекомендуемые режимы резания не найдены для выбранных параметров.</p>';
+                        }
+                    } else {
+                        console.error('Ошибка при получении данных');
+                    }
                 });
-        } else {
-            materialSelect.innerHTML = '<option value="">Сначала выберите тип материала</option>';
-            materialSelect.disabled = true;
+            } else {
+                // Если не все параметры выбраны, очищаем блок рекомендуемых параметров
+                var recommendedDiv = document.getElementById('recommended-parameters');
+                recommendedDiv.innerHTML = '';
+            }
         }
 
-        updateCoefficients(); // Обновляем коэффициенты при изменении типа материала
-    }
-
-    function updateCoefficients() {
-        var materialId = materialSelect.value;
-        var toolId = toolSelect.value;
-        var coatingId = coatingSelect.value;
-
-        if (materialId && toolId && coatingId) {
-            fetch(`/update_graph_data`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    material_id: materialId,
-                    tool_id: toolId,
-                    coating_id: coatingId
-                })
-            }).then(() => {
-                var iframe = document.querySelector('#dash-container iframe');
-                iframe.contentWindow.location.reload(); // Перезагрузка iframe для обновления графика и результатов
-            });
-        }
-    }
-
-    // Инициализируем коэффициенты при загрузке страницы
-    updateCoefficients();
-});
+        // Инициализируем коэффициенты при загрузке страницы
+        updateCoefficients();
+    });
 </script>
 </div>
 {% endblock %}
