@@ -1,4 +1,3 @@
-import sqlalchemy as sa
 from flask import render_template, request, redirect, jsonify, flash, url_for
 from sqlalchemy.orm import joinedload
 
@@ -28,11 +27,14 @@ def recommended_speed():
 
     # Получаем списки для выпадающих списков
     materials = Materials.query.join(RecommendationParameters).distinct().all()
-    coatings = Tools.query.join(RecommendationParameters).distinct().all()
-    tools = Coating.query.join(RecommendationParameters).distinct().all()
+    coatings = Coating.query.join(RecommendationParameters).distinct().all()
+    tools = Tools.query.join(RecommendationParameters).distinct().all()
 
     # Формируем запрос с учетом фильтров
-    query = RecommendationParameters.query
+    query = RecommendationParameters.query.options(
+        joinedload(RecommendationParameters.material),
+        joinedload(RecommendationParameters.tool),
+        joinedload(RecommendationParameters.coating))
     if material_id:
         query = query.filter_by(material_id=material_id)
     if coating_id:
@@ -375,7 +377,7 @@ def coating_update(coating_id):
 @app.route("/coating/<int:coating_id>/info")
 def coat_info(coating_id):
     coating = Coating.query.get_or_404(coating_id)
-    return render_template('coating.html', coating=coating)
+    return render_template('coat_info.html', coating=coating)
 
 
 @app.route('/tools')
@@ -384,8 +386,12 @@ def tools():
     tool_type = request.args.get('tool_type', 'all')
     search_query = request.args.get('search_query', '')
 
-    # Базовый запрос
-    query = Tools.query
+    # Оптимизация запроса с подгрузкой связанных геометрий
+    query = Tools.query.options(
+        db.joinedload(Tools.milling_geometry),
+        db.joinedload(Tools.turning_geometry),
+        db.joinedload(Tools.drill_geometry)
+    )
 
     # Фильтрация по типу инструмента
     if tool_type != 'all':
@@ -393,17 +399,9 @@ def tools():
 
     # Поиск по названию
     if search_query:
-        query = query.filter(Tools.name.ilike(f'%{search_query}%'))
-
-    # Оптимизация запроса с подгрузкой связанных геометрий
-    query = query.options(
-        db.joinedload(Tools.milling_geometry),
-        db.joinedload(Tools.turning_geometry),
-        db.joinedload(Tools.drill_geometry)
-    )
-
-    # Загружаем все инструменты
-    tools = query.all()
+        tools = [tool for tool in query.all() if search_query.lower() in tool.name.lower()]
+    else:
+        tools = query.all()
 
     return render_template('tools.html', tools=tools, selected_tool_type=tool_type, search_query=search_query)
 
@@ -544,40 +542,33 @@ def experiments_table():
     order = request.args.get('order', 'asc')
 
     experiments_query = Experiments.query.options(joinedload(Experiments.material), joinedload(Experiments.coating),
-                                                  joinedload(Experiments.tool))
+                                                  joinedload(Experiments.tool)).all()
 
+    # Фильтрация уже в Python
     if material_filter:
-        experiments_query = experiments_query.join(Experiments.material).filter(
-            Materials.name.ilike(f'%{material_filter}%')
-        )
+        experiments_query = [exp for exp in experiments_query if material_filter.lower() in exp.material.name.lower()]
 
     if coating_filter:
-        experiments_query = experiments_query.join(Experiments.coating).filter(
-            Experiments.coating.name.ilike(f'%{coating_filter}%')
-        )
+        experiments_query = [exp for exp in experiments_query if coating_filter.lower() in exp.coating.name.lower()]
 
     if spindle_min:
-        experiments_query = experiments_query.filter(Experiments.spindle_speed >= spindle_min)
+        experiments_query = [exp for exp in experiments_query if exp.spindle_speed >= float(spindle_min)]
 
     if spindle_max:
-        experiments_query = experiments_query.filter(Experiments.spindle_speed <= spindle_max)
+        experiments_query = [exp for exp in experiments_query if exp.spindle_speed <= float(spindle_max)]
 
     if feed_min:
-        experiments_query = experiments_query.filter(Experiments.feed_table >= feed_min)
+        experiments_query = [exp for exp in experiments_query if exp.feed_table >= float(feed_min)]
 
     if feed_max:
-        experiments_query = experiments_query.filter(Experiments.feed_table <= feed_max)
+        experiments_query = [exp for exp in experiments_query if exp.feed_table <= float(feed_max)]
 
     if sort_by:
-        if order == 'desc':
-            experiments_query = experiments_query.order_by(sa.desc(getattr(Experiments, sort_by)))
-        else:
-            experiments_query = experiments_query.order_by(sa.asc(getattr(Experiments, sort_by)))
-
-    experiments = experiments_query.all()
+        reverse = (order == 'desc')
+        experiments_query = sorted(experiments_query, key=lambda x: getattr(x, sort_by), reverse=reverse)
 
     return render_template('experiment.html',
-                           experiment=experiments,
+                           experiment=experiments_query,
                            sort_by=sort_by,
                            order=order,
                            request_args=request.args)
@@ -629,8 +620,44 @@ def experiments_info(experiment_id):
 
 @app.route("/adhesive")
 def adhesive():
-    adhesive_table = Adhesive.query.all()
-    return render_template('adhesive.html', adhesive=adhesive_table)
+    uniq_material = Materials.query.join(Adhesive).distinct().all()
+    uniq_coating = Coating.query.join(Adhesive).distinct().all()
+    uniq_temperature = Adhesive.query.with_entities(Adhesive.temperature).distinct().all()
+
+    selected_material = request.args.get('material_id')
+    selected_coating = request.args.get('coating_id')
+    selected_temperature = request.args.get('temperature')
+
+    query = Adhesive.query
+
+    if selected_material:
+        selected_material = int(selected_material)  # Преобразуем в целое число
+        query = query.filter(Adhesive.material_id == selected_material)
+    else:
+        selected_material = None
+
+    if selected_coating:
+        selected_coating = int(selected_coating)  # Преобразуем в целое число
+        query = query.filter(Adhesive.coating_id == selected_coating)
+    else:
+        selected_coating = None
+
+    if selected_temperature:
+        selected_temperature = float(selected_temperature)  # Преобразуем в число с плавающей точкой
+        query = query.filter(Adhesive.temperature == selected_temperature)
+    else:
+        selected_temperature = None
+
+    adhesive_table = query.all()
+
+    return render_template('adhesive.html',
+                           adhesive=adhesive_table,
+                           materials=uniq_material,
+                           coatings=uniq_coating,
+                           uniq_temperature=uniq_temperature,
+                           selected_temperature=selected_temperature,
+                           selected_coating=selected_coating,
+                           selected_material=selected_material)
 
 
 @app.route("/expected_parameters", methods=['GET', 'POST'])
@@ -669,7 +696,7 @@ def update_graph_data():
     diameter = tool.milling_geometry.diameter if tool.milling_geometry else None
     count_of_teeth = tool.milling_geometry.number_teeth if tool.milling_geometry else None
 
-    coefficient = Coefficients.query.filter_by(
+    coefficient: Coefficients = Coefficients.query.filter_by(
         material_id=material_id,
         tool_id=tool_id,
         coating_id=coating_id
@@ -685,7 +712,7 @@ def update_graph_data():
             'diameter': diameter,
             'teeth_count': count_of_teeth,
             'coating_id': coating_id,
-            'material_id': material_id,
+            'material_name': coefficient.material.name,
             'tool_id': tool_id
         }
 
@@ -703,11 +730,9 @@ def update_graph_data():
             'roughness': recommended.roughness,
             'hardening': round(recommended.hardening, 2),
             'micro_hardness': recommended.micro_hardness,
-            'durability': recommended.durability
+            'durability': recommended.durability_
         }
     else:
         recommended_data = None
 
     return jsonify({'status': 'success', 'recommended_data': recommended_data})
-
-

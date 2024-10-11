@@ -158,6 +158,7 @@ def create_dash(flask_app):
             # Извлекаем данные для расчетов подачи в минуту и продйденного пути.
             diameter = graph_data.get('diameter', 1)
             teeth_count = graph_data.get('teeth_count', 1)
+            material_name = graph_data.get('material_name', '')
 
             # Показатели степени
             a_force = -0.12
@@ -165,7 +166,7 @@ def create_dash(flask_app):
             a_temp = 0.4
             b_temp = 0.24
             a_life = -0.2
-            b_life = -0.15
+            b_life = -0.15 if 'ВТ' in material_name else -0.1
 
             # Приравниваем знавения слайдера к значению вводимого значения,
             # если функция вызывалась изменением input объукта.

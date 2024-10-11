@@ -1,7 +1,9 @@
-import sqlalchemy as sa
-from my_app import db
 import math
 from datetime import datetime
+
+import sqlalchemy as sa
+
+from my_app import db
 
 
 class Materials(db.Model):
@@ -208,7 +210,6 @@ class RecommendationParameters(db.Model):
     feed_table = db.Column(db.Float)
     roughness = db.Column(db.Float)
     hardening = db.Column(db.Float)
-    durability = db.Column(db.Float)
     micro_hardness = db.Column(db.Float)
 
     tool = db.relationship('Tools', foreign_keys=[tool_id], back_populates='recommendations')
@@ -218,7 +219,7 @@ class RecommendationParameters(db.Model):
     @property
     def cutter_speed(self):
         if self.tool:
-            d = self.tool.diameter
+            d = self.tool.milling_geometry.diameter
             return math.pi * d * self.spindle_speed / 1000
         else:
             return None
@@ -226,8 +227,36 @@ class RecommendationParameters(db.Model):
     @property
     def feed_of_teeth(self):
         if self.tool:
-            z = self.tool.number_teeth
+            z = self.tool.milling_geometry.number_teeth
             return self.feed_table / (z * self.spindle_speed)
+
+    @property
+    def coefficients(self):
+        return Coefficients.query.filter_by(
+            material_id=self.material_id,
+            tool_id=self.tool_id,
+            coating_id=self.coating_id
+        ).first()
+
+    @property
+    def Fz(self):
+        coefficient = self.coefficients.cutting_force_coefficient
+        return round(coefficient * (self.cutter_speed) ** -0.12 * (self.feed_of_teeth) ** 0.95, 2)
+
+    @property
+    def temperature(self):
+        coefficient = self.coefficients.cutting_temperature_coefficient
+        return round(coefficient * (self.cutter_speed) ** 0.4 * (self.feed_of_teeth) ** 0.24, 2)
+
+    @property
+    def durability_(self):
+        coefficient = self.coefficients.durability_coefficient
+        if coefficient:
+            b_life = -0.15 if 'ВТ' in self.material.name else -0.1
+            durability = coefficient * (self.cutter_speed) ** -0.2 * (self.feed_of_teeth) ** b_life
+            return round(durability, 2)
+        else:
+            return 'Не найден коэффициент'
 
 
 class Adhesive(db.Model):

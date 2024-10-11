@@ -65,10 +65,11 @@
                 <th>Инструмент</th>
                 <th>Покрытие</th>
                 <th>Обороты шпинделя, об/мин</th>
+                <th>Скорость резания, м/мин</th>
                 <th>Подача, мм/мин</th>
-                <th>Шероховатость, Ra</th>
-                <th>Наклеп, мм</th>
-                <th>Микротвердость, HB</th>
+                <th>Подача на зуб, мм/зуб</th>
+                <th>Силы рзания, Н</th>
+                <th>Температура, °C</th>
                 <th>Стойкость, мин</th>
             </tr>
         </thead>
@@ -79,11 +80,12 @@
                 <td><a href="/tool/{{i.tool_id}}/info">{{ i.tool.name }}</a></td>
                 <td><a href="/coating/{{i.coating_id}}/info">{{ i.coating.name }}</a></td>
                 <td>{{ i.spindle_speed }}</td>
+                <td>{{ i.cutter_speed | round(2) }}</td>
                 <td>{{ i.feed_table }}</td>
-                <td>{{ i.roughness }}</td>
-                <td>{{ i.hardening | round(2) }}</td>
-                <td>{{ i.micro_hardness }}</td>
-                <td>{{ i.durability }}</td>
+                <td>{{ i.feed_of_teeth | round(3) }}</td>
+                <td>{{ i.Fz }}</td>
+                <td>{{ i.temperature }}</td>
+                <td>{{ i.durability_ }}</td>
             </tr>
             {% endfor %}
         </tbody>

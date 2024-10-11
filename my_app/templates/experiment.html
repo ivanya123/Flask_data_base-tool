@@ -56,7 +56,7 @@
             <tr>
                 <td><a href="/material/{{i.material_id}}/info">{{ i.material.name }}</a></td>
                 <td><a href="/tool/{{i.tool_id}}/info">{{ i.tool.name }}</a></td>
-                <td>{{ i.coating.name }}</td>
+                <td><a href="/coating/{{i.coating_id}}/info">{{ i.coating.name }}</a></td>
                 <td>{{ i.spindle_speed | int }}</td>
                 <td>{{ i.feed_table | int }}</td>
                 <td>{{ i.length_path | round(2)}}</td>
