@@ -19,17 +19,21 @@ dict_df = pd.read_excel('Стойкость (1).xlsx', sheet_name=[0, 1, 2, 3])
 for key, df in dict_df.items():
     material = df.columns[0]
     for row in df.index:
-        coating = df.iloc[row, 0]
+        coating: str = df.iloc[row, 0]
         tool = 'Фреза 6157-7005'
         material_id = Materials.query.filter_by(name=material).first().id
-        try:
-            if coating == 'AlTiCrN3':
-                print('-----------------------')
-                coating = 'AlTiCrN3'
-            coating_id = Coating.query.filter_by(name=coating).first().id
-        except AttributeError as e:
-            print(coating)
-            raise e
+        # try:
+        #     if 'AlTiC' in coating:
+        #         coating = coating.replace(coating, 'AlTiCrN3') if '+' not in coating else coating
+        #     if 'AlTiC' in coating and '+' in coating:
+        #         coating = coating.replace(coating, 'AlTiCrN3+TiB2')
+        #     if 'AlTiN3' in coating and '+' in coating:
+        #         coating = coating.replace(coating, 'AlTiN3+TiB2')
+        #
+        coating_id = Coating.query.filter_by(name=coating.strip()).first().id
+        # except AttributeError as e:
+        #     print(coating)
+
         tool: Tools = Tools.query.filter_by(name=tool).first()
         tool_id = tool.id
         spindle_speed = (df.iloc[row, -1]*1000)/(math.pi*tool.milling_geometry.diameter)
@@ -41,12 +45,15 @@ for key, df in dict_df.items():
             feed_table=feed_table,
             spindle_speed=spindle_speed
         )
-        print(recommendation_parameters)
+        db.session.add(recommendation_parameters)
+
+db.session.commit()
 
 
-# all_coating = Coating.query.filter_by(name='AlTiCrN3').all()
+# all_coating = Coating.query.filter_by(name='AlTiCrN3+TiB2').all()
 # for i in all_coating:
-#     print(i.name)
+#     if i.name == 'AlTiCrN3+TiB2':
+#         print(i.name, '---')
 
 
 

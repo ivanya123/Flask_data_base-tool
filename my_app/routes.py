@@ -725,15 +725,15 @@ def update_graph_data():
 
     if recommended:
         # Вычисляем дополнительные параметры
-        cutting_speed = recommended.cutter_speed
-        feed_per_tooth = recommended.feed_of_teeth
+        cutting_speed = round(recommended.cutter_speed, 2)
+        feed_per_tooth = round(recommended.feed_of_teeth, 2)
         cutting_force = recommended.Fz
         temperature = recommended.temperature
         durability = recommended.durability_
 
         recommended_data = {
-            'spindle_speed': recommended.spindle_speed,
-            'feed_rate': recommended.feed_table,
+            'spindle_speed': int(recommended.spindle_speed),
+            'feed_rate': int(recommended.feed_table),
             'cutting_speed': round(cutting_speed, 2) if cutting_speed else None,
             'feed_per_tooth': round(feed_per_tooth, 3) if feed_per_tooth else None,
             'cutting_force': round(cutting_force, 2) if cutting_force else None,

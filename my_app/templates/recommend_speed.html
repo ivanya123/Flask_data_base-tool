@@ -79,9 +79,9 @@
                 <td><a href="/material/{{i.material_id}}/info">{{ i.material.name }}</a></td>
                 <td><a href="/tool/{{i.tool_id}}/info">{{ i.tool.name }}</a></td>
                 <td><a href="/coating/{{i.coating_id}}/info">{{ i.coating.name }}</a></td>
-                <td>{{ i.spindle_speed }}</td>
+                <td>{{ i.spindle_speed | int }}</td>
                 <td>{{ i.cutter_speed | round(2) }}</td>
-                <td>{{ i.feed_table }}</td>
+                <td>{{ i.feed_table | int }}</td>
                 <td>{{ i.feed_of_teeth | round(3) }}</td>
                 <td>{{ i.Fz }}</td>
                 <td>{{ i.temperature }}</td>
