@@ -22,10 +22,6 @@ def create_dash(flask_app):
             html.Div(className='col', children=[
                 html.Span('Стойкость инструмента: '),
                 html.Span(id='tool_life', children='-')
-            ]),
-            html.Div(className='col', children=[
-                html.Span('Пройденный путь: '),
-                html.Span(id='length_processing', children='-')
             ])
         ]),
 
@@ -37,8 +33,7 @@ def create_dash(flask_app):
                 options=[
                     {'label': 'Сила резания', 'value': 'cutting_force'},
                     {'label': 'Температура резания', 'value': 'cutting_temperature'},
-                    {'label': 'Стойкость инструмента', 'value': 'tool_life'},
-                    {'label': 'Пройденный путь', 'value': 'length_processing'}
+                    {'label': 'Стойкость инструмента', 'value': 'tool_life'}
                 ],
                 value='cutting_force',
                 className='form-control'
@@ -122,7 +117,6 @@ def create_dash(flask_app):
          Output('cutting_force', 'children'),
          Output('cutting_temperature', 'children'),
          Output('tool_life', 'children'),
-         Output('length_processing', 'children'),
          Output('cutting_speed_value', 'children'),
          Output('feed_per_tooth_value', 'children'),
          Output('slider_speed', 'value'),
@@ -257,14 +251,13 @@ def create_dash(flask_app):
             cutting_force_value = Kc * (speed_slider ** a_force) * (supply_slider ** b_force)
             cutting_temperature_value = Kt * (speed_slider ** a_temp) * (supply_slider ** b_temp)
             tool_life_value = Kl * (speed_slider ** a_life) * (supply_slider ** b_life)
-            length_processing_value = (tool_life_value * supply_slider * teeth_count * speed_slider * 1000) / (
-                    diameter * 3.14)
+
 
             # Форматирование результатов
             cutting_force = f'{cutting_force_value:.2f} Н'
             cutting_temperature = f'{cutting_temperature_value:.2f} °C'
             tool_life = f'{tool_life_value:.2f} мин'
-            length_processing = f'{length_processing_value:.2f} мм'
+
 
         # Обновление значений скорости и подачи
         cutting_speed_value = f'{speed_slider}'
@@ -276,7 +269,6 @@ def create_dash(flask_app):
             cutting_force,
             cutting_temperature,
             tool_life,
-            length_processing,
             cutting_speed_value,
             feed_per_tooth_value,
             np.round(speed_slider, 2),
