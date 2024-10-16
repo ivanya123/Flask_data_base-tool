@@ -625,18 +625,6 @@ def add_experiment():
             print(form.errors)
     return render_template('add_experiment.html', form=form)
 
-@app.route('/experiments/<int:experiment_id>/delete')
-def delete_experiment(experiment_id):
-    experiment: Experiments = Experiments.query.get_or_404(experiment_id)
-    wear_table: list[WearTables] = WearTables.query.filter_by(experiment_id=experiment_id).all()
-    for row in wear_table:
-        db.session.delete(row)
-    db.session.delete(experiment)
-    try:
-        db.session.commit()
-        return redirect('/experiments')
-    except Exception as e:
-        return f'Ошибка {e} при удалении эксперимента'
 
 @app.route("/experiments/<int:experiment_id>/info")
 def experiments_info(experiment_id):
