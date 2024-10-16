@@ -740,7 +740,7 @@ def update_graph_data():
     if recommended:
         # Вычисляем дополнительные параметры
         cutting_speed = round(recommended.cutter_speed, 2)
-        feed_per_tooth = round(recommended.feed_of_teeth, 2)
+        feed_per_tooth = round(recommended.feed_of_teeth, 3)
         cutting_force = recommended.Fz
         temperature = recommended.temperature
         durability = recommended.durability_

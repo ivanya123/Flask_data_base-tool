@@ -110,7 +110,7 @@ class ExperimentForm(FlaskForm):
     material_id = SelectField('Материал', coerce=int, validators=[DataRequired()])
     tool_id = SelectField('Инструмент', coerce=int, validators=[DataRequired()])
     coating_id = SelectField('Покрытие', coerce=int, validators=[DataRequired()])
-    spindle_speed = FloatField('Часстота обороротов шпинделя (об/мин)', validators=[DataRequired()])
+    spindle_speed = FloatField('Частота обороротов шпинделя (об/мин)', validators=[DataRequired()])
     feed_table = FloatField('Подача стола (мм/мин)', validators=[DataRequired()])
     depth_cut = FloatField('Глубина фрезерования (мм)', validators=[DataRequired()])
     width_cut = FloatField('Ширина фрезерования (мм)', validators=[DataRequired()])
